@@ -1,26 +1,19 @@
 const { CLIENT_URL } = require('../config/config');
 const { generateToken } = require('../utils/jwt');
 const { sendOtpEmail, sendForgetPasswordOTP } = require('./mail.controllers');
- 
+
 const bcrypt = require('bcrypt');
 const passport = require('passport');
 
 const crypto = require('crypto');
 
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../utils/prisma');
 
 const googleCallback = (req, res) => {
-
   const user = req.user;
-
   const token = generateToken(user);
- 
-  console.log(user)
 
-  console.log(token)
-  
-  res.redirect(`${CLIENT_URL}/user/Login1/?token=${token}`)
+  res.redirect(`${CLIENT_URL}/user/Login1/?token=${token}`);
 };
 
 const requestRegistrationOtp = async (req, res) => {
@@ -39,7 +32,6 @@ const requestRegistrationOtp = async (req, res) => {
       return res.status(409).json({ error: 'An account with this email already exists.' });
     }
 
-    // Generate a 6-digit OTP
     const otp = crypto.randomInt(100000, 999999).toString();
 
     await prisma.otp.upsert({
@@ -47,8 +39,6 @@ const requestRegistrationOtp = async (req, res) => {
       update: { otp },
       create: { email, otp },
     });
-
-    // Send the OTP via email
     await sendOtpEmail(email, otp);
 
     res.status(200).json({ message: 'OTP has been sent to your email. Please verify to complete registration.' });
@@ -87,30 +77,29 @@ const verifyOtpAndRegister = async (req, res) => {
     });
 
     await prisma.$transaction(async (tx) => {
-        await tx.user.create({
-            data: {
-                name,
-                email,
-                password: hashedPassword,
-                isVerified: true, // mark verified user
-                created_at: new Date(),
-                OrganisationUsers: {
-                    create: {
-                        organisation_id: organisation.id,
-                        user_type: "USER",
-                    },
-                },
+      await tx.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          isVerified: true, 
+          created_at: new Date(),
+          OrganisationUsers: {
+            create: {
+              organisation_id: organisation.id,
+              user_type: 'USER',
             },
-        });
-        // Delete udes OTP
-        await tx.otp.delete({ where: { email } });
+          },
+        },
+      });
+      await tx.otp.delete({ where: { email } });
     });
 
     res.status(201).json({ message: 'User registered successfully!' });
   } catch (error) {
     console.log(error);
     if (error.code === 'P2002') {
-        return res.status(409).json({ error: 'An account with this email already exists.' });
+      return res.status(409).json({ error: 'An account with this email already exists.' });
     }
     res.status(500).json({ error: 'Server error during registration.' });
   }
@@ -125,23 +114,22 @@ const loginUser = (req, res, next) => {
       });
     }
 
-    req.login(user, { session: false }, (err) => {
-      if (err) {
-        res.send(err);
+    req.login(user, { session: false }, (loginErr) => {
+      if (loginErr) {
+        return res.status(500).json({ message: 'Login failed' });
       }
-    
+
       const token = generateToken(user);
       return res.json({ token });
     });
   })(req, res, next);
 };
 
-
 const failure = (req, res) => {
   res.send('Failed...!');
 };
 
-//forget password otp
+// forget password otp
 const requestPasswordResetOtp = async (req, res) => {
   const { email } = req.body;
 
@@ -211,6 +199,12 @@ const verifyOtpAndResetPassword = async (req, res) => {
   }
 };
 
-module.exports = { googleCallback, failure, requestRegistrationOtp, verifyOtpAndRegister, loginUser, requestPasswordResetOtp, verifyOtpAndResetPassword };
-
-
+module.exports = {
+  googleCallback,
+  failure,
+  requestRegistrationOtp,
+  verifyOtpAndRegister,
+  loginUser,
+  requestPasswordResetOtp,
+  verifyOtpAndResetPassword,
+};

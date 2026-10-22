@@ -1,0 +1,350 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap");
+
+.ws-page {
+  --navy: #13213c;
+  --slate: #4a536f;
+  --muted: #7f89a8;
+  --soft: #a6aec4;
+  --line: #d9dce6;
+  --bg: #f6f6f8;
+  --green: #d3e6c0;
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 24px 16px;
+  font-family: "Manrope", system-ui, sans-serif;
+  color: var(--navy);
+}
+
+.ws-mono {
+  font-family: "IBM Plex Mono", monospace;
+  letter-spacing: .06em;
+}
+
+.ws-shell {
+  max-width: 1000px;
+  min-height: 520px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 18px 28px 40px;
+  border-radius: 2px;
+}
+
+.ws-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ws-logo,
+.ws-avatar {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+
+.ws-logo {
+  background: linear-gradient(135deg, var(--navy), var(--muted));
+}
+
+.ws-avatar {
+  background: var(--line);
+}
+
+.ws-org {
+  font-size: 12px;
+  color: var(--slate);
+}
+
+.ws-nav {
+  display: flex;
+  justify-content: center;
+  gap: 34px;
+  padding-top: 14px;
+  font-size: 8.5px;
+  color: var(--soft);
+}
+
+.ws-nav-item {
+  padding-bottom: 4px;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+}
+
+.ws-active {
+  color: var(--navy);
+  border-bottom-color: var(--navy);
+}
+
+.ws-main {
+  margin-top: 40px;
+}
+
+.ws-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ws-title {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 400;
+}
+
+.ws-sub {
+  margin: 0;
+  font-size: 11px;
+  color: var(--slate);
+}
+
+.ws-page .ws-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  margin: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--navy);
+  color: #fff;
+  font: 500 12px "Manrope", sans-serif;
+  cursor: pointer;
+}
+
+.ws-rule {
+  border: 0;
+  border-top: 1px solid var(--slate);
+  margin: 18px 0 26px;
+}
+
+.ws-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 18px;
+}
+
+.ws-page .ws-card {
+  position: relative;
+  height: 190px;
+  margin: 0;
+  padding: 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  border: 0;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #ebecf1 0%, var(--line) 100%);
+  color: var(--navy);
+  cursor: pointer;
+}
+
+.ws-card svg {
+  margin-top: 58px;
+}
+
+.ws-card-label {
+  font-size: 9px;
+  color: var(--slate);
+}
+
+.ws-badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--navy);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.ws-list-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 150px;
+  padding: 14px;
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0 1px 6px rgba(19, 33, 60, .12);
+}
+
+.ws-list-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--slate);
+}
+
+.ws-list-top p {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 300;
+  line-height: 1.4;
+  color: var(--navy);
+}
+
+.ws-list-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 8px;
+  color: var(--slate);
+}
+
+.ws-list-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ws-chip {
+  display: inline-block;
+  margin: 0 4px 4px 0;
+  padding: 2px 6px;
+  font-size: 7.5px;
+  background: var(--green);
+  color: var(--navy);
+}
+
+.ws-shared {
+  margin-top: auto;
+  font-size: 7.5px;
+  color: var(--slate);
+}
+
+.ws-card:focus-visible,
+.ws-cta:focus-visible {
+  outline: 2px solid var(--muted);
+  outline-offset: 2px;
+}
+
+.ws-list-card .ws-rcpt {
+  align-self: flex-end;
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 400 11px "Manrope", sans-serif;
+  color: var(--muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ws-cactions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.ws-cactions .ws-rcpt {
+  align-self: auto;
+}
+
+.ws-page .ws-rcpt:hover {
+  background: none;
+  color: var(--navy);
+}
+
+@media (max-width: 760px) {
+  .ws-page {
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  .ws-shell {
+    padding: 16px 16px 32px;
+    border-radius: 0;
+    min-height: 100vh;
+  }
+
+  .ws-logo,
+  .ws-avatar {
+    width: 22px;
+    height: 22px;
+  }
+
+  .ws-org {
+    font-size: 14px;
+  }
+
+  .ws-nav {
+    justify-content: flex-start;
+    gap: 22px;
+    padding-top: 18px;
+    font-size: 11px;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .ws-nav-item {
+    flex: none;
+  }
+
+  .ws-main {
+    margin-top: 28px;
+  }
+
+  .ws-sub {
+    font-size: 13px;
+  }
+
+  .ws-page .ws-cta {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 18px;
+    font-size: 14px;
+  }
+
+  .ws-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ws-page .ws-card {
+    height: 150px;
+  }
+
+  .ws-card svg {
+    margin-top: 36px;
+  }
+
+  .ws-card-label {
+    font-size: 11px;
+  }
+
+  .ws-badge {
+    top: -8px;
+    right: -4px;
+  }
+
+  .ws-list-card {
+    padding: 16px;
+  }
+
+  .ws-list-top p {
+    font-size: 15px;
+  }
+
+  .ws-list-meta {
+    font-size: 11px;
+  }
+
+  .ws-chip {
+    font-size: 10px;
+  }
+
+  .ws-shared {
+    font-size: 10px;
+  }
+
+  .ws-list-card .ws-rcpt {
+    font-size: 13px;
+  }
+}

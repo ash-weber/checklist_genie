@@ -1,18 +1,26 @@
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
+
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth2").Strategy;
 
 const LocalStrategy = require("passport-local").Strategy;
 const bcrypt = require("bcrypt");
 
-const { PrismaClient, userPosition } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("./prisma");
+
+const GOOGLE_CALLBACK =
+  process.env.CALL_BACK_URL || "http://localhost:5002/google/callback";
+
+console.log("[google] clientID  :", process.env.CLIENT_ID);
+console.log("[google] callbackURL:", GOOGLE_CALLBACK);
 
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.CLIENT_ID,
       clientSecret: process.env.CLIENT_SECRET,
-      callbackURL: process.env.CALL_BACK_URL,
+      callbackURL: GOOGLE_CALLBACK,
       passReqToCallback: true,
     },
     async function (request, accessToken, refreshToken, profile, done) {
@@ -42,8 +50,6 @@ passport.use(
           },
         });
 
-        console.log("exist", existingOrg);
-
         const organisation = await prisma.organisation.upsert({
           where: {
             organisation: organisationDomain,
@@ -58,8 +64,6 @@ passport.use(
         });
 
         const isNewOrganization = !existingOrg;
-
-        console.log("new", isNewOrganization);
 
         let org_user = await prisma.organisation_Users.findFirst({
           where: {
@@ -79,8 +83,6 @@ passport.use(
           });
         } else {
           const userType = isNewOrganization ? "ADMIN" : "USER";
-
-          console.log("usertype", userPosition);
 
           org_user = await prisma.organisation_Users.create({
             data: {

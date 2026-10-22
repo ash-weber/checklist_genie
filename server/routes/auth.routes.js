@@ -1,15 +1,39 @@
 const express = require('express');
 const passport = require('passport');
-const { googleCallback, failure, requestRegistrationOtp, loginUser, verifyOtpAndRegister, requestPasswordResetOtp, verifyOtpAndResetPassword } = require('../controllers/auth.controllers');
 const router = express.Router();
 
+const ctrl = require('../controllers/auth.controllers');
 
 
-router.get('/auth/google', passport.authenticate('google', { scope: ['email', 'profile'] }));
+const REQUIRED = [
+  'googleCallback',
+  'failure',
+  'requestRegistrationOtp',
+  'verifyOtpAndRegister',
+  'loginUser',
+  'requestPasswordResetOtp',
+  'verifyOtpAndResetPassword',
+];
+const missing = REQUIRED.filter((name) => typeof ctrl[name] !== 'function');
+if (missing.length) {
+  throw new Error(
+    `auth.controllers is missing: ${missing.join(', ')}. ` +
+    `It currently exports: ${Object.keys(ctrl).join(', ') || '(nothing - circular require or wrong file?)'}`
+  );
+}
 
-router.get('/google/callback', passport.authenticate('google'), googleCallback);
+const {
+  googleCallback,
+  failure,
+  requestRegistrationOtp,
+  verifyOtpAndRegister,
+  loginUser,
+  requestPasswordResetOtp,
+  verifyOtpAndResetPassword,
+} = ctrl;
 
-
+router.get('/auth/google', passport.authenticate('google', { scope: ['email', 'profile'], session: false }));
+router.get('/google/callback', passport.authenticate('google', { session: false }), googleCallback);
 router.get('/failure', failure);
 
 router.post('/register', requestRegistrationOtp);

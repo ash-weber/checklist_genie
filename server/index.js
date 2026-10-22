@@ -1,74 +1,62 @@
 require("dotenv").config();
+const fs = require("fs");
+const path = require("path");
 const express = require("express");
-const session = require("express-session");
+const cors = require("cors");
+const morgan = require("morgan");
+
 const passport = require("./utils/passport.config");
-// const microsoftRoutes = require('./routes/microsoft.routes')
+const { authentication } = require("./utils/jwt");
+
 const microsoftAuth = require("./routes/microsoftAuth");
 const authRoutes = require("./routes/auth.routes");
-const userRoutes = require("./routes/user.routes");
-const tagRoutes = require("./routes/tags.routes");
-const templateRoutes = require("./routes/template.routes");
-const itemRoutes = require("./routes/items.routes");
-const responseRoutes = require("./routes/itemResponse.routes");
-const positionRoutes = require("./routes/userPosition.routes");
-const userTypeRoutes = require("./routes/userTypes.routes");
-const mailRoutes = require("./routes/mail.routes");
 const templateRecepientRoutes = require("./routes/emailRecepients.routes");
+const onboardingRoutes = require("./routes/onboarding.routes");
+const teamRoutes = require("./routes/team.routes");
+const checklistBuilderRoutes = require("./routes/checklistBuilder.routes");
+const submissionRoutes = require("./routes/submission.routes");
+const insightsRoutes = require("./routes/insights.routes");
+const adminPanelRoutes = require("./routes/adminPanel.routes");
 
-const cors = require("cors");
-const { authentication } = require("./utils/jwt");
 const app = express();
-var morgan = require("morgan");
-const port = process.env.PORT;
+const port = process.env.PORT || 5002;
+
+app.set("trust proxy", 1); 
 
 app.use(morgan("dev"));
-const path = require("path");
 
-const corsOptions = {
-  origin: [
-    `${process.env.CLIENT_URL}`,
-    `${process.env.REACT_APP_BACKEND_SERVER_URL}`,
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
-
-app.use(express.json());
 app.use(
-  session({
-    secret: process.env.SECRET,
-    resave: false,
-    saveUninitialized: true,
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+app.use(express.json());
+
 app.use(passport.initialize());
-app.use(passport.session());
+
+app.get("/health", (req, res) => res.json({ ok: true }));
+
 app.use("/", authRoutes);
 app.use("/microsoft", microsoftAuth);
-app.use("/api", userRoutes);
-// app.use(authentication);
-app.use("/tags", authentication, tagRoutes);
-app.use("/template", authentication, templateRoutes);
-app.use("/items", authentication, itemRoutes);
-app.use("/checklist", authentication, mailRoutes);
-app.use("/response", authentication, responseRoutes);
+
 app.use("/templaterecepients", authentication, templateRecepientRoutes);
-// app.use('/microsoft',microsoftRoutes)
+app.use("/onboarding", onboardingRoutes);
+app.use("/teams", teamRoutes);
+app.use("/checklists", checklistBuilderRoutes);
+app.use("/insights", insightsRoutes);
+app.use("/admin-panel", authentication, adminPanelRoutes);
+app.use("/", submissionRoutes); 
 
-app.use("/position", authentication, positionRoutes);
-app.use("/type", authentication, userTypeRoutes);
-
-app.use(express.static(path.join(__dirname, "../client/build/")));
-
-if (process.env.NODE_ENV === "PRODUCTION") {
-  app.get("*", (req, res) => {
-    console.log("Works");
-    return res.sendFile(path.resolve(__dirname, "../client/build/", "index.html"));
-  });
+const buildDir = path.join(__dirname, "../client/build");
+if (fs.existsSync(path.join(buildDir, "index.html"))) {
+  app.use(express.static(buildDir));
+  app.get("*", (req, res) => res.sendFile(path.join(buildDir, "index.html")));
 }
 
 app.listen(port, () => {
   console.log("Server is running on port " + port);
+  require("./services/reminders").start();
 });

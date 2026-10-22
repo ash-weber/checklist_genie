@@ -1,11 +1,10 @@
-const express = require("express");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../utils/prisma");
+
 
 const addTemplateRecipients = async (req, res) => {
   try {
     const { template_id } = req.params;
-    const { recipients } = req.body; 
+    const { recipients } = req.body;
     const { organisation_user_id } = req.user;
 
     const template = await prisma.checklist_template.findUnique({
@@ -19,16 +18,6 @@ const addTemplateRecipients = async (req, res) => {
     if (!template) {
       return res.status(400).json({ message: "Template not found" });
     }
-
-    // const isOwner = template.ChecklistTemplateOwners.some(
-    //   (owner) => owner.organisation_user_id === organisation_user_id
-    // );
-
-    // if (!isOwner) {
-    //   return res
-    //     .status(400)
-    //     .json({ message: "Unauthorized to modify this template" });
-    // }
 
     const createdRecipients = await prisma.templateRecipients.createMany({
       data: recipients.map((recipient) => ({
@@ -49,38 +38,21 @@ const addTemplateRecipients = async (req, res) => {
     console.error(error);
     res
       .status(500)
-      .json({ message: "Failed to add recipients", error: error.message });
+      .json({ message: "Failed to add recipients" });
   }
 };
 
 const removeTemplateRecipient = async (req, res) => {
   try {
     const { recipient_id } = req.params;
-    const { organisation_user_id } = req.user;
+
     const recipient = await prisma.templateRecipients.findUnique({
       where: { id: parseInt(recipient_id) },
-      include: {
-        checklistTemplate: {
-          include: {
-            ChecklistTemplateOwners: true,
-          },
-        },
-      },
     });
 
     if (!recipient) {
       return res.status(400).json({ message: "Recipient not found" });
     }
-
-    // const isOwner = recipient.checklistTemplate.ChecklistTemplateOwners.some(
-    //   (owner) => owner.organisation_user_id === organisation_user_id
-    // );
-
-    // if (!isOwner) {
-    //   return res
-    //     .status(400)
-    //     .json({ message: "Unauthorized to modify this template" });
-    // }
 
     await prisma.templateRecipients.delete({
       where: { id: parseInt(recipient_id) },
@@ -91,7 +63,7 @@ const removeTemplateRecipient = async (req, res) => {
     console.error(error);
     res
       .status(500)
-      .json({ message: "Failed to remove recipient", error: error.message });
+      .json({ message: "Failed to remove recipient" });
   }
 };
 
@@ -110,7 +82,7 @@ const getTemplateRecipients = async (req, res) => {
     console.error(error);
     res
       .status(500)
-      .json({ message: "Failed to fetch recipients", error: error.message });
+      .json({ message: "Failed to fetch recipients" });
   }
 };
 

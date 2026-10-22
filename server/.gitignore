@@ -1,3 +1,9 @@
-node_modules
-# Keep environment variables out of version control
+node_modules/
 .env
+.env.*
+!.env.example
+backup.json
+*.log
+.DS_Store
+server/sync-to-live.js
+server/backup.js

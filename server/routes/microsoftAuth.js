@@ -1,12 +1,29 @@
 const express = require("express");
 const passport = require("passport");
 const MicrosoftStrategy = require("passport-microsoft").Strategy;
-const { PrismaClient } = require("@prisma/client");
+const prisma = require("../utils/prisma");
 const { generateToken } = require("../utils/jwt");
 const { CLIENT_URL } = require("../config/config");
 
-const prisma = new PrismaClient();
 const router = express.Router();
+
+
+async function getOrCreateOrganisation(orgName) {
+  try {
+    return await prisma.organisation.upsert({
+      where: { organisation: orgName },
+      update: {},
+      create: { organisation: orgName, created_at: new Date() },
+    });
+  } catch (e) {
+    if (e.code === "P2002") {
+      return await prisma.organisation.findUnique({
+        where: { organisation: orgName },
+      });
+    }
+    throw e;
+  }
+}
 
 passport.use(
   new MicrosoftStrategy(
@@ -23,40 +40,33 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        const email = profile.emails && profile.emails[0]?.value;
-        const name = profile.displayName;
-        const tenantId = profile._json.tenantId;
+        const email = (
+          (profile.emails && profile.emails[0]?.value) ||
+          ""
+        ).toLowerCase();
+
+        if (!email) {
+          return done(new Error("No email returned from Microsoft"), null);
+        }
+
+        const orgName = email.substring(email.lastIndexOf("@") + 1);
+        const image = profile.photos?.[0]?.value || null;
 
         const user = await prisma.user.upsert({
-          where: { email: email },
+          where: { email },
           update: {
             name: profile.displayName,
-            image: profile.photos?.value || null,
-            created_at: new Date(),
+            image,
           },
           create: {
-            email: email,
+            email,
             name: profile.displayName,
-            image: profile.photos?.value || null,
+            image,
             created_at: new Date(),
           },
         });
 
-        const organisation = await prisma.organisation.upsert({
-          where: {
-            organisation: email.substring(email.lastIndexOf("@") + 1),
-          },
-          update: {
-            created_at: new Date(),
-          },
-          create: {
-            organisation: email.substring(
-              email.lastIndexOf("@") + 1,
-              email.lastIndexOf(".")
-            ),
-            created_at: new Date(),
-          },
-        });
+        const organisation = await getOrCreateOrganisation(orgName);
 
         let org_user = await prisma.organisation_Users.findFirst({
           where: {
@@ -67,12 +77,8 @@ passport.use(
 
         if (org_user) {
           org_user = await prisma.organisation_Users.update({
-            where: {
-              id: org_user.id,
-            },
-            data: {
-              created_at: new Date(),
-            },
+            where: { id: org_user.id },
+            data: { created_at: new Date() },
           });
         } else {
           org_user = await prisma.organisation_Users.create({
@@ -97,27 +103,18 @@ passport.use(
     }
   )
 );
-passport.serializeUser(function (user, done) {
-  done(null, user);
-});
-
-passport.deserializeUser(function (user, done) {
-  done(null, user);
-});
 
 router.get(
   "/",
-  passport.authenticate("microsoft", { prompt: "select_account" })
+  passport.authenticate("microsoft", { prompt: "select_account", session: false })
 );
 
 router.get(
   "/callback",
-  passport.authenticate("microsoft", { failureRedirect: "/login" }),
+  passport.authenticate("microsoft", { failureRedirect: `${CLIENT_URL}/`, session: false }),
   (req, res) => {
     try {
-      const user = req.user;
-      const token = generateToken(user);
-      console.log("🚀 ~ process.env.CLIENT_URL:", process.env.CLIENT_URL);
+      const token = generateToken(req.user);
       res.redirect(`${CLIENT_URL}/user/Login1/?token=${token}`);
     } catch (error) {
       console.error("Error in callback processing:", error);
@@ -125,17 +122,5 @@ router.get(
     }
   }
 );
-
-router.get("/logout", (req, res) => {
-  req.logout((err) => {
-    if (err) {
-      console.error("Error during logout:", err);
-      return res
-        .status(500)
-        .json({ error: "Logout failed. Please try again." });
-    }
-    res.redirect(process.env.CLIENT_URL);
-  });
-});
 
 module.exports = router;
