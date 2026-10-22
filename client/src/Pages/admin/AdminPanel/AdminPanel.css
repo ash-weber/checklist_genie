@@ -1,0 +1,685 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap");
+
+.ap-page {
+  --w: 1180px; 
+  --ink: #13213c;
+  --slate: #4a536f;
+  --muted: #7f89a8;
+  --soft: #a6aec4;
+  --line: #d9dce6;
+  --bg: #f6f6f8;
+  --paper: #fff;
+  --card: #f6f6f8;
+  --card-line: transparent;
+  --field: #fff;
+  --btn: #13213c;
+  --btn-ink: #fff;
+  --red: #b3261e;
+  --ok: #2f9e5e;
+  --shadow: 0 10px 37px rgba(19, 33, 60, .18);
+  color-scheme: light;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 24px 16px;
+  background: var(--bg);
+  font-family: "Manrope", system-ui, sans-serif;
+  color: var(--ink);
+  overflow-x: hidden;
+}
+
+.ap-mono {
+  font-family: "IBM Plex Mono", monospace;
+  letter-spacing: .05em;
+}
+
+.ap-shell {
+  box-sizing: border-box;
+  max-width: var(--w);
+  min-height: calc(100vh - 48px);
+  margin: 0 auto;
+  padding: 22px 44px 120px;
+  background: var(--paper);
+  border-radius: 6px;
+}
+
+/* top bar */
+.ap-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ap-logo,
+.ap-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  flex: none;
+  overflow: hidden;
+}
+
+.ap-logo {
+  background: linear-gradient(135deg, var(--slate), var(--ink));
+}
+
+.ap-avatar {
+  display: grid;
+  place-items: center;
+  background: var(--line);
+  font-size: .78em;
+  font-weight: 500;
+  color: var(--slate);
+}
+
+.ap-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ap-org {
+  flex: 1;
+  margin-left: 14px;
+  font-size: 1.05em;
+  color: var(--slate);
+}
+
+/* heading */
+.ap-main {
+  margin-top: 44px;
+}
+
+.ap-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ap-head h1 {
+  margin: 0 0 4px;
+  font-size: 1.9em;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.ap-head p {
+  margin: 0;
+  font-size: .86em;
+  color: var(--slate);
+}
+
+.ap-page .ap-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 22px;
+  border: 0;
+  border-radius: 999px;
+  box-shadow: none;
+  background: var(--btn);
+  color: var(--btn-ink);
+  font: 500 .88em "Manrope", sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ap-page .ap-cta:hover {
+  background: var(--btn);
+  color: var(--btn-ink);
+}
+
+.ap-headbtns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ap-page .ap-cta-alt,
+.ap-page .ap-cta-alt:hover {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+}
+
+.ap-rule {
+  border: 0;
+  border-top: 1px solid var(--slate);
+  margin: 20px 0 26px;
+}
+
+.ap-error {
+  margin: 0 0 18px;
+  font-size: .78em;
+  color: var(--red);
+}
+
+.ap-note {
+  padding: 50px 0;
+  font-size: .8em;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* shortcut tiles */
+.ap-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.ap-page .ap-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 20px 24px;
+  border: 1px solid var(--card-line);
+  border-radius: 14px;
+  box-shadow: none;
+  background: var(--card);
+  color: var(--ink);
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+
+.ap-page .ap-tile:hover {
+  background: var(--card);
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.ap-tile b {
+  font-size: 1.8em;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.ap-tlabel {
+  font-size: .7em;
+  color: var(--muted);
+}
+
+.ap-tsub {
+  font-size: .8em;
+  color: var(--slate);
+}
+
+/* cards */
+.ap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.ap-card {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 24px 28px 28px;
+  border: 1px solid var(--card-line);
+  border-radius: 14px;
+  background: var(--card);
+}
+
+.ap-card h2 {
+  margin: 0 0 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 1.15em;
+  font-weight: 400;
+}
+
+.ap-who {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.ap-big {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--line);
+  font-size: 1.6em;
+  font-weight: 500;
+  color: var(--slate);
+}
+
+.ap-big img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ap-name {
+  font-size: 1.3em;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ap-editfields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ap-page .ap-input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 38px;
+  margin: 0;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--field);
+  font: 400 .95em "Manrope", sans-serif;
+  color: var(--ink);
+  outline: none;
+}
+
+.ap-page .ap-input:focus {
+  border-color: var(--ink);
+}
+
+.ap-page .ap-input:disabled {
+  opacity: .55;
+}
+
+.ap-page .ap-num {
+  width: 90px;
+  flex: none;
+}
+
+.ap-dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 18px;
+  margin: 24px 0 0;
+}
+
+.ap-dl div {
+  min-width: 0;
+}
+
+.ap-dl dt {
+  font-size: .68em;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+
+.ap-dl dd {
+  margin: 0;
+  font-size: .95em;
+  overflow-wrap: anywhere;
+}
+
+.ap-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.ap-page .ap-btn {
+  margin: 0;
+  padding: 10px 24px;
+  border: 0;
+  border-radius: 999px;
+  box-shadow: none;
+  background: var(--btn);
+  color: var(--btn-ink);
+  font: 500 .9em "Manrope", sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ap-page .ap-btn:hover {
+  background: var(--btn);
+  color: var(--btn-ink);
+}
+
+.ap-page .ap-btn:disabled {
+  opacity: .4;
+  cursor: default;
+}
+
+.ap-page .ap-ghost {
+  margin: 0;
+  padding: 9px 20px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  box-shadow: none;
+  background: transparent;
+  color: var(--slate);
+  font: 400 .88em "Manrope", sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ap-page .ap-ghost:hover {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.ap-page .ap-ghost:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+/* logout section */
+.ap-logout {
+  margin-top: 18px;
+}
+
+.ap-logout p {
+  margin: 0 0 18px;
+  font-size: .9em;
+  color: var(--slate);
+}
+
+/* positions */
+.ap-empty {
+  padding: 6px 0 18px;
+  font-size: .72em;
+  color: var(--soft);
+}
+
+.ap-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.ap-chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px 5px 14px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  font-size: .8em;
+}
+
+.ap-page .ap-chips button {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: none;
+  background: transparent;
+  color: var(--slate);
+  font-size: .85em;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ap-page .ap-chips button:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+
+.ap-addrow {
+  display: flex;
+  gap: 10px;
+}
+
+.ap-addrow .ap-input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* preferences / notifications */
+.ap-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  margin-bottom: 20px;
+}
+
+.ap-field small {
+  font-size: .8em;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.ap-field small.ap-bad {
+  color: var(--red);
+}
+
+.ap-flabel {
+  font-size: .7em;
+  color: var(--muted);
+}
+
+.ap-every {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  max-width: 260px;
+}
+
+.ap-testrow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.ap-seg {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.ap-page .ap-seg button {
+  margin: 0;
+  padding: 8px 22px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--paper);
+  color: var(--slate);
+  font: 400 .9em "Manrope", sans-serif;
+  cursor: pointer;
+}
+
+.ap-page .ap-seg button:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+
+.ap-page .ap-seg button.on,
+.ap-page .ap-seg button.on:hover {
+  background: var(--btn);
+  color: var(--btn-ink);
+}
+
+.ap-switchrow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  font-size: .95em;
+  cursor: pointer;
+}
+
+.ap-switchrow input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.ap-switch {
+  flex: none;
+  position: relative;
+  width: 44px;
+  height: 25px;
+  border-radius: 999px;
+  background: var(--line);
+  transition: background .2s;
+}
+
+.ap-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: var(--paper);
+  transition: transform .2s;
+}
+
+.ap-switchrow input:checked + .ap-switch {
+  background: var(--btn);
+}
+
+.ap-switchrow input:checked + .ap-switch::after {
+  transform: translateX(19px);
+  background: var(--btn-ink);
+}
+
+.ap-switchrow input:focus-visible + .ap-switch {
+  outline: 2px solid var(--muted);
+  outline-offset: 2px;
+}
+
+/* sticky save bar for preferences */
+.ap-savebar {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px 10px 22px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  font-size: .72em;
+  color: var(--slate);
+  transform: translate(-50%, 24px);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .2s, opacity .2s;
+}
+
+.ap-savebar.ap-show {
+  transform: translate(-50%, 0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ap-flash {
+  color: var(--ok);
+}
+
+@media (max-width: 1000px) {
+  .ap-shell {
+    padding: 22px 28px 120px;
+  }
+
+  .ap-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ap-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .ap-page {
+    padding: 0;
+  }
+
+  .ap-shell {
+    padding: 18px 18px 120px;
+    border-radius: 0;
+    min-height: 100vh;
+  }
+
+  .ap-main {
+    margin-top: 30px;
+  }
+
+  .ap-tiles {
+    grid-template-columns: 1fr;
+  }
+
+  .ap-dl {
+    grid-template-columns: 1fr;
+  }
+
+  .ap-card {
+    padding: 20px 18px;
+  }
+
+  .ap-who {
+    flex-wrap: wrap;
+  }
+
+  .ap-main {
+    margin-top: 30px;
+  }
+
+  .ap-head h1 {
+    font-size: 1.6em;
+  }
+
+  .ap-page .ap-seg button {
+    padding: 8px 16px;
+  }
+
+  .ap-savebar {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 10px 12px 10px 16px;
+    transform: translateY(24px);
+  }
+
+  .ap-savebar.ap-show {
+    transform: translateY(0);
+  }
+
+  .ap-headbtns {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .ap-page .ap-cta {
+    width: 100%;
+    justify-content: center;
+  }
+}

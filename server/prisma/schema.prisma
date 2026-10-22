@@ -1,10 +1,393 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
+model Otp {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  otp       String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model User {
+  id                        Int                          @id @default(autoincrement())
+  email                     String                       @unique
+  name                      String?
+  image                     String?                      @db.MediumText
+  created_at                DateTime?
+  password                  String?
+  isVerified                Boolean?                     @default(false)
+  OrganisationUsersPosition Organisation_User_position[]
+  OrganisationUsers         Organisation_Users[]
+  Preference                user_preference?
+}
+
+model Organisation {
+  id                   Int                  @id @default(autoincrement())
+  organisation         String               @unique
+  created_at           DateTime?
+  group_name           String?
+  onboarded            Boolean              @default(false)
+  OrganisationUsers    Organisation_Users[]
+  OrganisationTemplate checklist_template[]
+  teams                team[]
+  BusinessProcesses    business_process[]
+}
+
+model Organisation_Users {
+  ItemClaims                            checklist_item_claim[]
+  id                                    Int                          @id @default(autoincrement())
+  organisation_id                       Int
+  user_id                               Int
+  user_type                             String?                      @default("USER")
+  user_position                         String?
+  created_at                            DateTime?
+  exclude_from_reports                  Boolean?                     @default(false)
+  OrganisationUserPosition              Organisation_User_position[]
+  organisation                          Organisation                 @relation(fields: [organisation_id], references: [id], onDelete: Cascade)
+  user                                  User                         @relation(fields: [user_id], references: [id])
+  Session                               Session[]
+  OrganizationTemplate                  TemplateRecipients[]
+  OrganisationUserChecklistItemResponse checklist_item_response[]
+  OrganisationChecklistTemplate         checklist_template[]
+  OrganisationTemplateOwners            checklist_template_owners[]
+  OrganisationTemplateVersion           checklist_template_version[]
+  OrganisationTags                      tags[]
+  TeamMemberships                       team_member[]
+  Submissions                           checklist_submission[]
+
+  @@index([organisation_id], map: "Organisation_Users_organisation_id_fkey")
+  @@index([user_id], map: "Organisation_Users_user_id_fkey")
+  @@index([exclude_from_reports], map: "idx_organisation_users_exclude_from_reports")
+  @@index([user_type], map: "idx_organisation_users_user_type")
+}
+
+model Organisation_User_position {
+  id                   Int                @id @default(autoincrement())
+  organisation_user_id Int
+  user_id              Int?
+  user_position        userPosition?
+  created_at           DateTime           @default(now())
+  OrganisationUsers    Organisation_Users @relation(fields: [organisation_user_id], references: [id], onDelete: Cascade)
+  user                 User?              @relation(fields: [user_id], references: [id])
+
+  @@index([organisation_user_id], map: "Organisation_User_position_organisation_user_id_fkey")
+  @@index([user_id], map: "Organisation_User_position_user_id_fkey")
+}
+
+model tags {
+  id                   Int                  @id @default(autoincrement())
+  tag_name             String               @unique
+  description          String
+  organisation_user_id Int
+  created_at           DateTime
+  user_position        userPosition?
+  recurrent            frequency
+  ChecklistTemplate    checklist_template[]
+  OrganisationUsers    Organisation_Users   @relation(fields: [organisation_user_id], references: [id], onDelete: Cascade)
+
+  @@index([organisation_user_id], map: "tags_organisation_user_id_fkey")
+}
+
+model checklist_template {
+  Claims                  checklist_item_claim[]
+  id                      Int                          @id @default(autoincrement())
+  template_name           String
+  repeating               Boolean                      @default(false)
+  tag_id                  Int?
+  priority                priority?
+  organisation_user_id    Int
+  created_at              DateTime
+  organisation_id         Int
+  current_version_id      Int?
+  due_date                DateTime?                    @db.Date
+  recurrence              String                       @default("NONE") @db.VarChar(20)
+  recurrence_custom_days  String?                      @db.VarChar(40)
+  workday_shift           Boolean                      @default(false)
+  recurrence_ends_on      DateTime?                    @db.Date
+  assignee_type           assignee_type?
+  is_archived             Boolean                      @default(false)
+  TemplateRecipients      TemplateRecipients[]
+  TemplateVersion         checklist_template_version?  @relation("Current Version", fields: [current_version_id], references: [version_id], onDelete: SetNull)
+  Organisation            Organisation                 @relation(fields: [organisation_id], references: [id], onDelete: Cascade)
+  OrganisationUsers       Organisation_Users           @relation(fields: [organisation_user_id], references: [id], onDelete: Cascade)
+  Tags                    tags?                        @relation(fields: [tag_id], references: [id])
+  ChecklistTemplateOwners checklist_template_owners?
+  ChecklistTemplate       checklist_template_version[] @relation("Version")
+  checklist_items         checklist_items[]            @relation("TemplateItems")
+  ListTypes               template_list_type[]
+  SharedTeams             template_shared_team[]
+  Submissions             checklist_submission[]
+
+  @@index([current_version_id], map: "checklist_template_current_version_id_fkey")
+  @@index([organisation_id], map: "checklist_template_organisation_id_fkey")
+  @@index([organisation_user_id], map: "checklist_template_organisation_user_id_fkey")
+  @@index([tag_id], map: "checklist_template_tag_id_fkey")
+}
+
+model checklist_template_version {
+  version_id                   Int                               @id @default(autoincrement())
+  checklist_template_id        Int
+  organisation_user_id         Int
+  created_at                   DateTime
+  ChecklistTemplateResponse    checklist_item_response[]
+  ChecklistTemplateVersion     checklist_template[]              @relation("Current Version")
+  ChecklistTemplateLinkedItems checklist_template_linked_items[]
+  ChecklistTemplate            checklist_template                @relation("Version", fields: [checklist_template_id], references: [id], onDelete: Cascade)
+  OrganisationUsers            Organisation_Users                @relation(fields: [organisation_user_id], references: [id], onDelete: Cascade)
+  Submissions                  checklist_submission[]
+
+  @@index([checklist_template_id], map: "checklist_template_version_checklist_template_id_fkey")
+  @@index([organisation_user_id], map: "checklist_template_version_organisation_user_id_fkey")
+}
+
+model checklist_template_linked_items {
+  Claims                       checklist_item_claim[]
+  id                           Int                        @id @default(autoincrement())
+  template_version_id          Int
+  checklist_item_id            Int
+  created_at                   DateTime
+  is_hidden                    Boolean                    @default(false)
+  sort_order                   Int                        @default(0)
+  ChecklistTemplateLinkedItems checklist_item_response[]
+  ChecklistItems               checklist_items            @relation(fields: [checklist_item_id], references: [id], onDelete: Cascade)
+  ChecklistTemplateVersion     checklist_template_version @relation(fields: [template_version_id], references: [version_id], onDelete: Cascade)
+
+  @@index([checklist_item_id], map: "checklist_template_linked_items_checklist_item_id_fkey")
+  @@index([template_version_id], map: "checklist_template_linked_items_template_version_id_fkey")
+}
+
+model checklist_template_owners {
+  id                    Int                @id @default(autoincrement())
+  checklist_template_id Int                @unique
+  organisation_user_id  Int
+  created_at            DateTime
+  ChecklistTemplate     checklist_template @relation(fields: [checklist_template_id], references: [id], onDelete: Cascade)
+  OrganisationUsers     Organisation_Users @relation(fields: [organisation_user_id], references: [id], onDelete: Cascade)
+
+  @@index([organisation_user_id], map: "checklist_template_owners_organisation_user_id_fkey")
+}
+
+model checklist_items {
+  id                                                                                      Int                               @id @default(autoincrement())
+  checklist_name                                                                          String
+  tag_id                                                                                  Int?
+  organisation_user_id                                                                    Int
+  organisation_id                                                                         Int
+  Instructions                                                                            String
+  notes                                                                                   String?                           @db.Text
+  process_id                                                                              String?                           @db.VarChar(50)
+  input_type                                                                              inputType
+  created_at                                                                              DateTime                          @default(now())
+  checklist_item_kpi_config                                                               checklist_item_kpi_config?
+  checklist_item_relationship_checklist_item_relationship_child_item_idTochecklist_items  checklist_item_relationship[]     @relation("checklist_item_relationship_child_item_idTochecklist_items")
+  checklist_item_relationship_checklist_item_relationship_parent_item_idTochecklist_items checklist_item_relationship[]     @relation("checklist_item_relationship_parent_item_idTochecklist_items")
+  ChecklistTemplateLinkedItems                                                            checklist_template_linked_items[]
+  checklist_template                                                                      checklist_template[]              @relation("TemplateItems")
+
+  @@unique([organisation_id, process_id], map: "uq_items_org_process")
+}
+
+model checklist_item_response {
+  id                                    Int                              @id @default(autoincrement())
+  status                                Boolean?
+  comments                              String?
+  organisation_user_id                  Int?
+  checklist_template_linked_items_id    Int?
+  user_assigned_checklist_template_id   Int?
+  template_version                      Int?
+  selected_date                         String?
+  created_at                            DateTime?
+  input                                 String?
+  submission_id                         Int?
+  ChecklistTemplateLinkedItems          checklist_template_linked_items? @relation(fields: [checklist_template_linked_items_id], references: [id])
+  OrganisationUserChecklistItemResponse Organisation_Users?              @relation(fields: [organisation_user_id], references: [id])
+  ChecklistTemplateVersion              checklist_template_version?      @relation(fields: [template_version], references: [version_id])
+  Submission                            checklist_submission?            @relation(fields: [submission_id], references: [id], onDelete: Cascade)
+
+  @@index([checklist_template_linked_items_id], map: "checklist_item_response_checklist_template_linked_items_id_fkey")
+  @@index([organisation_user_id], map: "checklist_item_response_organisation_user_id_fkey")
+  @@index([template_version], map: "checklist_item_response_template_version_fkey")
+  @@index([created_at], map: "idx_checklist_item_response_created_at")
+  @@index([submission_id])
+}
+
+model TemplateRecipients {
+  id                    Int                @id @default(autoincrement())
+  checklist_template_id Int
+  recipient_email       String             @db.VarChar(255)
+  cc_bcc_emails         String?            @db.VarChar(255)
+  assigned_by_user_id   Int
+  created_at            DateTime?          @default(now()) @db.Timestamp(0)
+  updated_at            DateTime?          @default(now()) @updatedAt @db.Timestamp(0)
+  checklistTemplate     checklist_template @relation(fields: [checklist_template_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "TemplateRecipients_ibfk_1")
+  assignedByUser        Organisation_Users @relation(fields: [assigned_by_user_id], references: [id], onDelete: Cascade, map: "TemplateRecipients_ibfk_2")
+
+  @@index([assigned_by_user_id], map: "TemplateRecipients_ibfk_2")
+  @@index([checklist_template_id], map: "checklist_template_id")
+}
+
+model Session {
+  id                   String             @id
+  organisation_user_id Int
+  refreshTokenHash     String             @db.VarChar(255)
+  userAgent            String?            @db.VarChar(500)
+  ipAddress            String?            @db.VarChar(45)
+  isRevoked            Boolean            @default(false)
+  expiresAt            DateTime
+  createdAt            DateTime           @default(now())
+  lastUsedAt           DateTime           @default(now())
+  Organisation_Users   Organisation_Users @relation(fields: [organisation_user_id], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([organisation_user_id])
+  @@index([refreshTokenHash])
+}
+
+model checklist_item_kpi_config {
+  id              Int             @id @default(autoincrement())
+  item_id         Int             @unique
+  aggregation     String          @default("Monthly")
+  updated_at      DateTime
+  checklist_items checklist_items @relation(fields: [item_id], references: [id], onDelete: Cascade)
+
+  @@index([item_id])
+}
+
+model checklist_item_relationship {
+  id       Int             @id @default(autoincrement())
+  parent_item_id      Int
+  child_item_id       Int
+  created_at        DateTime        @default(now())
+  checklist_items_checklist_item_relationship_child_item_idTochecklist_items  checklist_items @relation("checklist_item_relationship_child_item_idTochecklist_items", fields: [child_item_id], references: [id], onDelete: Cascade)
+  checklist_items_checklist_item_relationship_parent_item_idTochecklist_items checklist_items @relation("checklist_item_relationship_parent_item_idTochecklist_items", fields: [parent_item_id], references: [id], onDelete: Cascade)
+
+  @@unique([parent_item_id, child_item_id])
+  @@index([child_item_id])
+  @@index([parent_item_id])
+}
+
+model team {
+  id              Int                    @id @default(autoincrement())
+  organisation_id Int
+  name            String
+  created_at      DateTime               @default(now())
+  Organisation    Organisation           @relation(fields: [organisation_id], references: [id], onDelete: Cascade)
+  Members         team_member[]
+  SharedTemplates template_shared_team[]
+
+  @@unique([organisation_id, name])
+  @@index([organisation_id])
+}
+
+model team_member {
+  id                   Int                @id @default(autoincrement())
+  team_id              Int
+  organisation_user_id Int
+  created_at           DateTime           @default(now())
+  Team                 team               @relation(fields: [team_id], references: [id], onDelete: Cascade)
+  OrganisationUser     Organisation_Users @relation(fields: [organisation_user_id], references: [id], onDelete: Cascade)
+
+  @@unique([team_id, organisation_user_id])
+  @@index([organisation_user_id])
+}
+
+model template_list_type {
+  id                    Int                @id @default(autoincrement())
+  checklist_template_id Int
+  list_type             String             @db.VarChar(50)
+  Template              checklist_template @relation(fields: [checklist_template_id], references: [id], onDelete: Cascade)
+
+  @@unique([checklist_template_id, list_type], map: "uq_tlt")
+}
+
+model template_shared_team {
+  id                    Int                @id @default(autoincrement())
+  checklist_template_id Int
+  team_id               Int
+  Template              checklist_template @relation(fields: [checklist_template_id], references: [id], onDelete: Cascade)
+  Team                  team               @relation(fields: [team_id], references: [id], onDelete: Cascade)
+
+  @@unique([checklist_template_id, team_id], map: "uq_tst")
+  @@index([team_id])
+}
+
+model checklist_submission {
+  id                    Int                        @id @default(autoincrement())
+  checklist_template_id Int
+  template_version_id   Int
+  organisation_user_id  Int
+  selected_date         DateTime                   @db.Date
+  notes_html            String?                    @db.MediumText
+  include_history       Boolean                    @default(false)
+  status                String                     @default("SUBMITTED") @db.VarChar(20)
+  submitted_at          DateTime?
+  email_sent_at         DateTime?
+  created_at            DateTime                   @default(now())
+
+  ChecklistTemplate     checklist_template         @relation(fields: [checklist_template_id], references: [id], onDelete: Cascade)
+  TemplateVersion       checklist_template_version @relation(fields: [template_version_id], references: [version_id], onDelete: Cascade)
+  OrganisationUser      Organisation_Users         @relation(fields: [organisation_user_id], references: [id], onDelete: Cascade)
+  Responses             checklist_item_response[]
+
+  @@unique([checklist_template_id, organisation_user_id, selected_date], map: "uq_submission_per_day")
+  @@index([organisation_user_id])
+  @@index([checklist_template_id])
+}
+
+model checklist_item_claim {
+  id                    Int                             @id @default(autoincrement())
+  checklist_template_id Int
+  linked_item_id        Int
+  organisation_user_id  Int
+  selected_date         DateTime                        @db.Date
+  created_at            DateTime                        @default(now())
+  Template              checklist_template              @relation(fields: [checklist_template_id], references: [id], onDelete: Cascade)
+  LinkedItem            checklist_template_linked_items @relation(fields: [linked_item_id], references: [id], onDelete: Cascade)
+  OrganisationUser      Organisation_Users              @relation(fields: [organisation_user_id], references: [id], onDelete: Cascade)
+
+  @@unique([linked_item_id, selected_date], map: "uq_claim_item_day")
+  @@index([checklist_template_id])
+  @@index([organisation_user_id])
+}
+
+// code = prefix of the Process ID (LQ_1 -> LQ). Names are set by the admin in Insights.
+model business_process {
+  id              Int          @id @default(autoincrement())
+  organisation_id Int
+  code            String       @db.VarChar(50)
+  name            String       @db.VarChar(100)
+  created_at      DateTime     @default(now())
+  updated_at      DateTime     @default(now()) @updatedAt
+  Organisation    Organisation @relation(fields: [organisation_id], references: [id], onDelete: Cascade)
+
+  @@unique([organisation_id, code], map: "uq_business_process_org_code")
+  @@index([organisation_id])
+}
+
+model user_preference {
+  id               Int       @id @default(autoincrement())
+  user_id          Int       @unique
+  theme            String    @default("light") @db.VarChar(10)
+  font_size        String    @default("Medium") @db.VarChar(10)
+  notifications    Boolean   @default(false)
+  reminder_every   Int       @default(1)
+  reminder_unit    String    @default("Hours") @db.VarChar(10)
+  last_reminded_at DateTime?
+  updated_at       DateTime  @default(now()) @updatedAt
+  User             User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+enum assignee_type {
+  MEMBER
+  GROUP
 }
 
 enum userPosition {
@@ -38,170 +421,4 @@ enum priority {
 enum inputType {
   Boolean
   Numeric
-}
-
-model Otp {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  otp       String
-  createdAt DateTime @default(now())
-
-  @@index([createdAt])
-}
-
-model User {
-  id                        Int                          @id @default(autoincrement())
-  email                     String                       @unique
-  password                  String?
-  isVerified Boolean  @default(false)
-  name                      String?
-  image                     String?
-  created_at                DateTime?
-  OrganisationUsers         Organisation_Users[]
-  OrganisationUsersPosition Organisation_User_position[]
- 
-}
-
-model Organisation {
-  id                   Int                  @id @default(autoincrement())
-  organisation         String               @unique
-  created_at           DateTime?
-  OrganisationUsers    Organisation_Users[]
-  OrganisationTemplate checklist_template[]
-}
-
-model Organisation_Users {
-  id                                    Int                          @id @default(autoincrement())
-  organisation_id                       Int
-  user_id                               Int
-  user_type                             String?                      @default("USER")
-  user_position                         String?
-  created_at                            DateTime?
-  user                                  User                         @relation(fields: [user_id], references: [id])
-  organisation                          Organisation                 @relation(fields: [organisation_id], references: [id])
-  OrganisationUserPosition              Organisation_User_position[]
-  OrganisationTags                      tags[]
-  OrganisationChecklistTemplate         checklist_template[]
-  OrganisationTemplateVersion           checklist_template_version[]
-  OrganisationTemplateOwners            checklist_template_owners[]
-  OrganisationUserChecklistItemResponse checklist_item_response[]
-  OrganizationTemplate                   TemplateRecipients[]
-}
-
-model Organisation_User_position {
-  id                   Int                @id @default(autoincrement())
-  organisation_user_id Int
-  user_id              Int?
-  user_position        userPosition?
-  created_at           DateTime           @default(now())
-  OrganisationUsers    Organisation_Users @relation(fields: [organisation_user_id], references: [id])
-  user                 User?              @relation(fields: [user_id], references: [id])
-}
-
-model tags {
-  id                   Int                  @id @default(autoincrement())
-  tag_name             String               @unique
-  description          String
-  organisation_user_id Int
-  created_at           DateTime
-  recurrent            frequency
-  user_position        userPosition?
-  OrganisationUsers    Organisation_Users?  @relation(fields: [organisation_user_id], references: [id])
-  ChecklistTemplate    checklist_template[]
-  ChecklistItems       checklist_items[]
-}
-
-model checklist_template {
-  id                   Int      @id @default(autoincrement())
-  template_name        String
-  repeating            Boolean  @default(false)
-  tag_id               Int
-  priority             priority
-  organisation_user_id Int
-  created_at           DateTime
-  organisation_id      Int
-  current_version_id   Int?
-
-  Tags                    tags                         @relation(fields: [tag_id], references: [id], onDelete: Cascade)
-  OrganisationUsers       Organisation_Users?          @relation(fields: [organisation_user_id], references: [id])
-  Organisation            Organisation?                @relation(fields: [organisation_id], references: [id])
-  TemplateVersion         checklist_template_version?  @relation(name: "Current Version", fields: [current_version_id], references: [version_id])
-  ChecklistTemplate       checklist_template_version[] @relation("Version")
-  ChecklistTemplateOwners checklist_template_owners[]
-  items                   checklist_items[]            @relation("TemplateItems")
-  TemplateRecipients      TemplateRecipients[]
-}
-
-model checklist_template_version {
-  version_id                   Int                               @id @default(autoincrement())
-  checklist_template_id        Int
-  organisation_user_id         Int
-  created_at                   DateTime
-  ChecklistTemplate            checklist_template                @relation(name: "Version", fields: [checklist_template_id], references: [id])
-  OrganisationUsers            Organisation_Users                @relation(fields: [organisation_user_id], references: [id])
-  ChecklistTemplateVersion     checklist_template[]              @relation(name: "Current Version")
-  ChecklistTemplateLinkedItems checklist_template_linked_items[]
-  ChecklistTemplateResponse    checklist_item_response[]
-}
-
-model checklist_template_linked_items {
-  id                           Int                        @id @default(autoincrement())
-  template_version_id          Int
-  checklist_item_id            Int
-  created_at                   DateTime
-  ChecklistTemplateVersion     checklist_template_version @relation(fields: [template_version_id], references: [version_id])
-  ChecklistItems               checklist_items            @relation(fields: [checklist_item_id], references: [id])
-  ChecklistTemplateLinkedItems checklist_item_response[]
-}
-
-model checklist_template_owners {
-  id                    Int                @id @default(autoincrement())
-  checklist_template_id Int                @unique
-  organisation_user_id  Int
-  created_at            DateTime
-  ChecklistTemplate     checklist_template @relation(fields: [checklist_template_id], references: [id])
-  OrganisationUsers     Organisation_Users @relation(fields: [organisation_user_id], references: [id])
-}
-
-model checklist_items {
-  id                           Int                               @id @default(autoincrement())
-  checklist_name               String
-  organisation_user_id         Int
-  tag_id                       Int
-  organisation_id              Int
-  Instructions                 String?
-  input_type                   inputType
-  created_at                   DateTime                          @default(now())
-  ChecklistTemplateLinkedItems checklist_template_linked_items[]
-  items1                       checklist_template[]              @relation("TemplateItems")
-  items2                       tags                              @relation(fields: [tag_id], references: [id], onDelete: Cascade)
-}
-
-model checklist_item_response {
-  id                                    Int                              @id @default(autoincrement())
-  status                                Boolean?
-  comments                              String?
-  organisation_user_id                  Int?
-  checklist_template_linked_items_id    Int?
-  user_assigned_checklist_template_id   Int?
-  template_version                      Int?
-  selected_date                         String?
-  created_at                            DateTime?
-  input                                 String?
-  OrganisationUserChecklistItemResponse Organisation_Users?              @relation(fields: [organisation_user_id], references: [id])
-  ChecklistTemplateLinkedItems          checklist_template_linked_items? @relation(fields: [checklist_template_linked_items_id], references: [id])
-  ChecklistTemplateVersion              checklist_template_version?      @relation(fields: [template_version], references: [version_id])
-}
-
-model TemplateRecipients {
-  id                    Int      @id @default(autoincrement())
-  checklist_template_id Int
-  recipient_email       String
-  cc_bcc_emails         String
-  assigned_by_user_id   Int
-  created_at            DateTime @default(now())
-  updated_at            DateTime @updatedAt
-
-  checklistTemplate checklist_template @relation(fields: [checklist_template_id], references: [id], onDelete: Cascade)
-  assignedByUser    Organisation_Users               @relation(fields: [assigned_by_user_id], references: [id])
 }

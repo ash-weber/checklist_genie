@@ -1,0 +1,324 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap");
+
+:root {
+  --c-slate: #4a536f;
+  --c-navy: #13213c;
+  --c-muted: #7f89a8;
+  --c-soft: #a6aec4;
+  --c-line: #d9dce6;
+  --c-bg: #f6f6f8;
+  --c-green: #d3e6c0;
+}
+
+.ob-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--c-bg);
+  font-family: "Manrope", system-ui, sans-serif;
+  color: var(--c-navy);
+}
+
+.ob-card {
+  width: 100%;
+  max-width: 1000px;
+  min-height: 520px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #fff;
+  border-radius: 4px;
+}
+
+.ob-mono {
+  font-family: "IBM Plex Mono", monospace;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Left ---------- */
+.ob-left {
+  padding: 36px 40px 28px;
+  border-right: 1px solid var(--c-line);
+  display: flex;
+  flex-direction: column;
+}
+
+.ob-title {
+  margin: 0 0 12px;
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.ob-text {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--c-slate);
+  max-width: 300px;
+}
+
+.ob-small {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--c-slate);
+}
+
+.ob-mt {
+  margin-top: 24px;
+}
+
+.ob-example {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 14px;
+  font-size: 10.5px;
+  color: var(--c-slate);
+}
+
+.ob-example .ob-mono {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--c-navy);
+  margin-bottom: 2px;
+}
+
+.ob-rule {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--c-line);
+  margin: 26px 0 14px;
+}
+
+.ob-brand {
+  margin-top: auto;
+  padding-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9px;
+  color: var(--c-slate);
+}
+
+.ob-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--c-soft), var(--c-slate));
+}
+
+.ob-right {
+  padding: 36px 40px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.ob-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 9.5px;
+  color: var(--c-slate);
+}
+
+.ob-group-input {
+  width: 100%;
+  border: 0;
+  border-bottom: 1.5px solid var(--c-navy);
+  background: transparent;
+  padding: 8px 0;
+  font: 500 18px "Manrope", sans-serif;
+  color: var(--c-navy);
+  outline: none;
+}
+.ob-group-input::placeholder {
+  color: var(--c-soft);
+  font-weight: 400;
+}
+
+.ob-team-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ob-team-input {
+  flex: 1;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--c-line);
+  border-radius: 2px;
+  font: 400 12px "Manrope", sans-serif;
+  color: var(--c-navy);
+  background: #fff;
+  outline: none;
+}
+.ob-team-input:focus {
+  border-color: var(--c-navy);
+}
+.ob-team-input::placeholder {
+  color: var(--c-slate);
+}
+
+.ob-team-input:disabled,
+.ob-team-input-max {
+  background: var(--c-bg);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-navy);
+  cursor: not-allowed;
+}
+.ob-team-input:disabled::placeholder,
+.ob-team-input-max::placeholder {
+  color: var(--c-navy);
+  opacity: 1;
+}
+
+.ob-page .ob-plus {
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--c-navy);
+  line-height: 0;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.ob-page .ob-plus:hover:not(:disabled) {
+  opacity: 0.85;
+  transform: scale(1.06);
+}
+.ob-page .ob-plus:disabled {
+  background: var(--c-line);
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+/* chips: 2 column grid */
+.ob-chips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.ob-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  padding: 0 8px 0 12px;
+  background: var(--c-bg);
+  border-radius: 2px;
+  font-size: 12px;
+  color: var(--c-slate);
+}
+.ob-chip-new {
+  background: var(--c-green);
+  color: var(--c-navy);
+}
+.ob-chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ob-page .ob-chip-x {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--c-navy);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.ob-page .ob-chip-x:hover {
+  background: rgba(19, 33, 60, 0.1);
+  color: var(--c-navy);
+}
+.ob-chip-new .ob-chip-x:hover {
+  background: rgba(19, 33, 60, 0.15);
+}
+
+/* footer */
+.ob-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ob-error {
+  font-size: 12px;
+  color: #b3261e;
+}
+
+.ob-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--c-navy);
+  color: #fff;
+  font: 500 13px "Manrope", sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+.ob-cta:hover:not(:disabled) {
+  opacity: 0.9;
+}
+.ob-cta:disabled {
+  background: var(--c-line);
+  color: var(--c-muted);
+  cursor: not-allowed;
+}
+
+.ob-group-input:focus-visible,
+.ob-cta:focus-visible,
+.ob-plus:focus-visible,
+.ob-chip-x:focus-visible {
+  outline: 2px solid var(--c-muted);
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  .ob-card {
+    grid-template-columns: 1fr;
+  }
+  .ob-left {
+    border-right: 0;
+    border-bottom: 1px solid var(--c-line);
+    padding: 28px 24px;
+  }
+  .ob-right {
+    padding: 28px 24px;
+  }
+  .ob-chips {
+    grid-template-columns: 1fr;
+  }
+}

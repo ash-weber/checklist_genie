@@ -1,4 +1,3 @@
-/* General Styling */
 .home-container {
   display: flex;
   justify-content: center;
@@ -11,7 +10,6 @@
   overflow: hidden;
 }
 
-/* Centered Container */
 .signin-section {
   background: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
   padding: 3rem 4rem;
@@ -100,9 +98,8 @@
   transform: translateY(-4px);
 }
 
-/* Microsoft Button Logo */
 .microsoft-logo {
   height : 30px;
-  width: 70px; /* Adjust size of logo */
-  margin-right: 10px; /* Space between logo and text */
+  width: 70px; 
+  margin-right: 10px; 
 }

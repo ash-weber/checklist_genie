@@ -1,0 +1,477 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@300;400;500;600&display=swap");
+
+.mr-page {
+  --navy: #13213c;
+  --slate: #4a536f;
+  --muted: #7f89a8;
+  --soft: #a6aec4;
+  --line: #e3e5ec;
+  --line-dark: #8a90a6;
+  --bg: #f6f6f8;
+  min-height: 100vh;
+  background: var(--bg);
+  font-family: "Manrope", system-ui, sans-serif;
+  color: var(--navy);
+  overflow-x: hidden;
+}
+
+.mr-mono {
+  font-family: "IBM Plex Mono", monospace;
+  letter-spacing: .05em;
+}
+
+.mr-shell {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  max-width: 1330px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 0 41px 48px;
+  background: #fff;
+}
+
+.mr-top {
+  display: flex;
+  align-items: center;
+  padding: 22px 0 0;
+}
+
+.mr-logo,
+.mr-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.mr-logo {
+  background: linear-gradient(135deg, #4a536f, #13213c);
+}
+
+.mr-avatar {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: #dfe2ea;
+  font: 500 11px "Manrope", sans-serif;
+  color: var(--slate);
+  cursor: pointer;
+}
+
+.mr-menuwrap {
+  position: relative;
+  flex: none;
+}
+
+.mr-menu {
+  position: absolute;
+  top: 32px;
+  right: 0;
+  z-index: 20;
+  min-width: 130px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(19, 33, 60, .15);
+}
+
+.mr-menu button {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  text-align: left;
+  font: 400 13px "Manrope", sans-serif;
+  color: var(--navy);
+  cursor: pointer;
+}
+
+.mr-org {
+  flex: 1;
+  min-width: 0;
+  margin-left: 14px;
+  font-size: 15px;
+  color: var(--slate);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mr-main {
+  flex: 1;
+  margin-top: 56px;
+}
+
+.mr-trow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--line-dark);
+}
+
+.mr-trow.mr-plain {
+  border-bottom: 0;
+}
+
+.mr-trow h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 28px;
+}
+
+.mr-teams {
+  display: flex;
+  gap: 6px;
+}
+
+.mr-chipbtn {
+  padding: 3px 9px;
+  border: 1px solid transparent;
+  font-size: 10.5px;
+  line-height: 13px;
+  color: var(--navy);
+  cursor: pointer;
+}
+
+.mr-chipbtn.mr-on {
+  border-color: var(--navy);
+}
+
+.mr-teams.mr-faint .mr-chipbtn {
+  background: #eceef3 !important;
+  color: var(--soft);
+  cursor: default;
+}
+
+.mr-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 400 14px "Manrope", sans-serif;
+  color: var(--navy);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.mr-right {
+  margin-left: auto;
+}
+
+.mr-nolate {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--soft);
+}
+
+.mr-blank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 560px;
+  margin-top: 22px;
+  padding: 0 20px;
+  background: #f3f3f5;
+  font-size: 14px;
+  color: #9aa0b2;
+  text-align: center;
+}
+
+.mr-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  padding: 18px 0 4px;
+}
+
+.mr-card {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-height: 132px;
+  padding: 16px 18px 14px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--bg);
+  text-align: left;
+  font: inherit;
+  color: var(--navy);
+  cursor: pointer;
+}
+
+.mr-ctop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.mr-ctop p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 20px;
+  font-weight: 400;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.mr-ctop svg {
+  flex: none;
+  margin-top: 3px;
+}
+
+.mr-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: auto;
+  padding-top: 26px;
+}
+
+.mr-tag {
+  padding: 3px 7px;
+  font: 400 10px/13px "Manrope", sans-serif;
+  letter-spacing: 0;
+  color: var(--navy);
+  white-space: nowrap;
+}
+
+.mr-meta {
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--slate);
+}
+
+.mr-late {
+  color: #b3261e;
+}
+
+.mr-sec {
+  margin-top: 18px;
+}
+
+.mr-sech {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 0 10px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  font: 400 17px "Manrope", sans-serif;
+  color: var(--navy);
+  text-align: left;
+  cursor: pointer;
+}
+
+.mr-sech.mr-open {
+  border-bottom-color: var(--line-dark);
+}
+
+.mr-empty {
+  padding: 22px 0 4px;
+  font-size: 11.5px;
+  color: var(--soft);
+}
+
+.mr-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 40px;
+  text-align: center;
+}
+
+.mr-foot .mr-link {
+  margin: 0 auto;
+}
+
+.mr-link.mr-faintlink {
+  color: var(--soft);
+  text-decoration: none;
+}
+
+.mr-act {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+
+.mr-page .mr-card:hover {
+  background: var(--bg);
+  color: var(--navy);
+}
+
+.mr-page .mr-sech:hover {
+  background: none;
+  color: var(--navy);
+}
+
+.mr-page .mr-link:hover {
+  background: none;
+  color: var(--navy);
+}
+
+.mr-page .mr-link.mr-faintlink:hover {
+  color: var(--soft);
+}
+
+.mr-page .mr-chipbtn:hover {
+  color: var(--navy);
+}
+
+.mr-page .mr-teams.mr-faint .mr-chipbtn:hover {
+  color: var(--soft);
+}
+
+.mr-page .mr-avatar:hover {
+  background: #dfe2ea;
+  color: var(--slate);
+}
+
+.mr-page .mr-menu button:hover {
+  background: var(--bg);
+  color: var(--navy);
+}
+
+
+@media (max-width: 1000px) {
+  .mr-shell {
+    padding: 0 28px 44px;
+  }
+
+  .mr-main {
+    margin-top: 40px;
+  }
+
+  .mr-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .mr-shell {
+    padding: 0 16px calc(32px + env(safe-area-inset-bottom));
+  }
+
+  .mr-top {
+    padding-top: 16px;
+  }
+
+  .mr-org {
+    font-size: 14px;
+  }
+
+  .mr-main {
+    margin-top: 28px;
+  }
+
+  .mr-trow {
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    padding-bottom: 12px;
+  }
+
+  .mr-trow h2 {
+    order: 1;
+    font-size: 20px;
+    line-height: 26px;
+  }
+
+  .mr-trow .mr-right,
+  .mr-trow .mr-nolate {
+    order: 2;
+  }
+
+  .mr-link {
+    padding: 6px 0;
+    font-size: 13.5px;
+  }
+
+  .mr-nolate {
+    font-size: 12.5px;
+  }
+
+  .mr-teams {
+    order: 3;
+    flex: 1 1 100%;
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 0 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .mr-teams::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mr-chipbtn {
+    flex: none;
+    padding: 7px 13px;
+    font-size: 11.5px;
+    line-height: 15px;
+    white-space: nowrap;
+  }
+
+  .mr-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding-top: 14px;
+  }
+
+  .mr-card {
+    min-height: 0;
+    padding: 14px 16px 12px;
+  }
+
+  .mr-ctop p {
+    font-size: 15px;
+  }
+
+  .mr-tags {
+    padding-top: 14px;
+  }
+
+  .mr-sec {
+    margin-top: 24px;
+  }
+
+  .mr-sech {
+    padding: 6px 0 12px;
+    font-size: 16px;
+  }
+
+  .mr-empty {
+    padding: 16px 0 4px;
+  }
+
+  .mr-blank {
+    min-height: 300px;
+    margin-top: 16px;
+  }
+
+  .mr-foot {
+    margin-top: 32px;
+  }
+}
+
+@media (max-width: 380px) {
+  .mr-shell {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .mr-card {
+    padding: 12px 14px 10px;
+  }
+}

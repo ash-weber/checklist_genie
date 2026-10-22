@@ -15,7 +15,6 @@ import {
 import { styled } from "@mui/system";
 import axios from "axios";
 
-// --- Styled Components (No changes needed) ---
 const BackgroundContainer = styled(Box)({
     height: "100vh",
     width: "100vw",
@@ -51,34 +50,29 @@ const ActionButton = styled(Button)({
     fontWeight: 600,
 });
 
-// --- Main Component ---
 const Home = () => {
-    // --- Hooks ---
     const navigate = useNavigate();
     const location = useLocation();
 
-    // --- State Management ---
-    const [view, setView] = useState("social"); // 'social', 'login', 'register', 'otp', 'forgotPassword', 'resetPassword'
+    const [view, setView] = useState("social");
     const [formData, setFormData] = useState({
         name: "",
         email: "",
         password: "",
         organisationName: "",
         otp: "",
-        confirmPassword: "", // Added for password reset
+        confirmPassword: "", 
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
 
-    // --- Centralized Login Success Handler ---
     const handleSuccessfulLogin = (token) => {
         localStorage.setItem("token", token);
         console.log("Login successful. Navigating...");
         navigate("/User/Browse");
     };
 
-    // --- Effect to Handle Social Login Redirect ---
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const token = params.get('token');
@@ -89,7 +83,6 @@ const Home = () => {
         }
     }, [location, navigate]);
 
-    // --- Handlers ---
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -158,7 +151,6 @@ const Home = () => {
         }
     };
 
-    // --- NEW: Forgot Password Handler ---
     const handleRequestPasswordReset = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -178,7 +170,6 @@ const Home = () => {
         }
     };
 
-    // --- NEW: Reset Password with OTP Handler ---
     const handleResetPassword = async (e) => {
         e.preventDefault();
         if (formData.password !== formData.confirmPassword) {
@@ -209,7 +200,6 @@ const Home = () => {
         setMessage("");
     };
 
-    // --- Reusable Form Component ---
     const renderForm = (title, fields, onSubmit, submitText, switchViewText, newView) => (
         <>
             <Link
