@@ -6,6 +6,7 @@ import "./AdminHome.css";
 
 const BASE_URL =
   process.env.REACT_APP_BACKEND_SERVER_URL || "http://localhost:5002";
+const MEMBER_ROUTE = "/my-workspace"; 
 
 const ROUTES = { insights: "/admin/insights", admin: "/admin/panel", teams: "/admin/teams", help: null };
 const REPEAT = {
@@ -186,6 +187,8 @@ export default function AdminHome() {
               <button type="button" className={`ah-item ${!teamId ? "ah-on" : ""}`} onClick={() => setTeamId(null)}>
                 All Checklists
               </button>
+              <button type="button" className={`ah-item ${MEMBER_ROUTE ? "" : "ah-off"}`} onClick={() => go(MEMBER_ROUTE)}>My Submissions</button>
+            
 
               <div className="ah-label">
                 Teams

@@ -154,6 +154,7 @@ export default function MemberHome() {
   const logout = () => { clearAuth(); navigate("/", { replace: true }); };
 
   const token = localStorage.getItem("token");
+  const userRole = localStorage.getItem("role");
   const initials = useMemo(() => {
     try { return String(JSON.parse(atob(token.split(".")[1])).name || "").trim().slice(0, 1).toUpperCase(); } catch { return ""; }
   }, [token]);
@@ -240,10 +241,18 @@ export default function MemberHome() {
               </div>
             )}
           </div>
+
         </header>
 
+          
+
         <main className="mr-main">
-          <div className={`mr-trow ${firstTime ? "mr-plain" : ""}`}>
+          {userRole == "admin" ? (
+              <button type="button" className="mr-link" onClick={() => navigate("/workspace")}>← Back to Checklists</button>
+            ) : (
+              ""
+            )}
+          <div className={`mr-trow mr-top ${firstTime ? "mr-plain" : ""}`}>
             <h2>Today</h2>
             {teams.length > 1 && (
               <nav className={`mr-teams mr-mono ${firstTime ? "mr-faint" : ""}`} aria-label="Teams">

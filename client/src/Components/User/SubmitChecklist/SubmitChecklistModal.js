@@ -375,7 +375,7 @@ export default function SubmitChecklistModal({ checklistId, dueDate, onClose, on
           />
           <label className="sc-check">
             <input type="checkbox" checked={history} onChange={(e) => setHistory(e.target.checked)} />
-            <span>Include 5-day history <small>(adds the last 4 days of entries, without comments)</small></span>
+            <span>Include last 5 submissions <small>(adds the last 5 submissions, without comments)</small></span>
           </label>
           {error && step === "final" && <div className="sc-err sc-mono">{error}</div>}
           <div className="sc-factions">
