@@ -498,11 +498,11 @@ const submitChecklist = async (req, res) => {
 
     const history = include_history
       ? await getHistoryForTemplate(template, organisation_user_id, dateStr).catch((e) => {
-          console.error("[mail] could not build the 5-day history:", e.message);
+          console.error("[mail] could not build the last 5 submissions history:", e.message);
           return [];
         })
       : [];
-    if (include_history) console.log(`[history] ${dateStr}: ${history.length} past entries found`);
+    if (include_history) console.log(`[history] ${dateStr}: ${history.length} response entries from last 5 submissions found`);
     const mail = await trySendEmail({
       checklist_template_id,
       userName,
@@ -540,52 +540,104 @@ const submitChecklist = async (req, res) => {
 };
 
 
-async function getHistoryForTemplate(template, organisation_user_id, dateStr) {
-  const current = template.TemplateVersion?.ChecklistTemplateLinkedItems || [];
-  const itemIds = new Set(current.map((li) => li.checklist_item_id));
 
-  const processIds = current.map((li) => li.ChecklistItems.process_id).filter(Boolean);
+async function getHistoryForTemplate(template, organisation_user_id, dateStr) {
+  const current =
+    template.TemplateVersion?.ChecklistTemplateLinkedItems || [];
+
+  const itemIds = new Set(
+    current.map((li) => li.checklist_item_id)
+  );
+
+  const processIds = current
+    .map((li) => li.ChecklistItems.process_id)
+    .filter(Boolean);
+
   if (processIds.length) {
     const same = await prisma.checklist_items.findMany({
-      where: { organisation_id: template.organisation_id, process_id: { in: processIds } },
+      where: {
+        organisation_id: template.organisation_id,
+        process_id: { in: processIds },
+      },
       select: { id: true },
     });
+
     same.forEach((i) => itemIds.add(i.id));
   }
+
   if (itemIds.size === 0) return [];
 
   const linked = await prisma.checklist_template_linked_items.findMany({
-    where: { checklist_item_id: { in: [...itemIds] } },
+    where: {
+      checklist_item_id: { in: [...itemIds] },
+    },
     select: { id: true },
   });
+
   if (linked.length === 0) return [];
 
-  
-  const rows = await prisma.checklist_item_response.findMany({
+  const linkedIds = linked.map((l) => l.id);
+
+  // Fetch the latest 5 complete historical submissions
+  const submissions = await prisma.checklist_submission.findMany({
     where: {
       organisation_user_id,
-      checklist_template_linked_items_id: { in: linked.map((l) => l.id) },
-      created_at: { gte: daysBefore(dateStr, 6) },
+      status: "SUBMITTED",
+      selected_date: {
+        lt: new Date(dateStr),
+      },
+      Responses: {
+        some: {
+          checklist_template_linked_items_id: {
+            in: linkedIds,
+          },
+        },
+      },
     },
-    include: { ChecklistTemplateLinkedItems: { include: { ChecklistItems: true } } },
-    orderBy: { created_at: "asc" }, 
+    orderBy: [
+      { submitted_at: "desc" },
+      { created_at: "desc" },
+      { id: "desc" },
+    ],
+    take: 5,
+    include: {
+      Responses: {
+        where: {
+          checklist_template_linked_items_id: {
+            in: linkedIds,
+          },
+        },
+        include: {
+          ChecklistTemplateLinkedItems: {
+            include: {
+              ChecklistItems: true,
+            },
+          },
+        },
+        orderBy: {
+          created_at: "asc",
+        },
+      },
+    },
   });
 
-  const from = dayKey(daysBefore(dateStr, 4)); 
-  const to = dayKey(daysBefore(dateStr, 1)); 
-  return rows
-    .map((r) => {
-      const ci = r.ChecklistTemplateLinkedItems?.ChecklistItems;
+  // Convert the 5 submissions into the existing email history format
+  return submissions.flatMap((submission) => {
+    return submission.Responses.map((r) => {
+      const ci =
+        r.ChecklistTemplateLinkedItems?.ChecklistItems;
+
       return {
-        date: dayKey(r.selected_date || r.created_at),
+        date: dayKey(submission.selected_date),
         item_id: ci?.id || null,
         item_name: ci?.checklist_name,
         process_id: ci?.process_id || null,
         input: r.input,
       };
-    })
-    .filter((h) => h.date >= from && h.date <= to);
+    });
+  });
 }
+
 
 function formatHistoryForEmail(history) {
   if (!history.length) return "";

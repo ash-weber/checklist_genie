@@ -86,15 +86,6 @@ const isIso = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s));
 const keyOf = (pid, itemId, name) =>
   pid ? `pid:${norm(pid)}` : itemId ? `id:${itemId}` : `name:${norm(name)}`;
 
-const previousDays = (isoDate, n = 4) => {
-  const base = new Date(`${isoDate}T00:00:00Z`);
-  return Array.from({ length: n }, (_, i) => {
-    const d = new Date(base);
-    d.setUTCDate(d.getUTCDate() - (n - i));
-    return d.toISOString().slice(0, 10);
-  });
-};
-
 const renderChecklistTable = (items, history, selectedDate, includeHistory = false) => {
   const list = Array.isArray(items) ? items : [];
   const hist = Array.isArray(history) ? history : [];
@@ -117,9 +108,13 @@ const renderChecklistTable = (items, history, selectedDate, includeHistory = fal
         </table>`;
   }
 
-  const dates = isIso(selectedDate)
-    ? previousDays(selectedDate)
-    : [...new Set(hist.map((h) => dKey(h.date)))].sort();
+  const dates = [
+    ...new Set(
+      hist
+        .map((h) => dKey(h.date))
+        .filter(isIso)
+    ),
+  ].sort((a, b) => a.localeCompare(b)).slice(-5);
 
   const past = new Map();
   for (const h of hist) {
