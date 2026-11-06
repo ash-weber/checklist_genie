@@ -6,7 +6,15 @@ const hasProcessId = (v) => typeof v === "string" && v.trim() !== "";
 
 const normalizeCode = (v) => String(v ?? "").trim().toUpperCase();
 
-const groupOf = (pid) => normalizeCode(String(pid).split(/[_-]/)[0]);
+const groupOf = (pid) => {
+  const value = normalizeCode(pid);
+
+  if (!value || value.startsWith("_") || value.startsWith("-")) {
+    return null;
+  }
+
+  return value.split(/[_-]/)[0] || null;
+};
 
 const validateProcessId = (raw) => {
   if (raw === undefined || raw === null || String(raw).trim() === "") return { value: null };
