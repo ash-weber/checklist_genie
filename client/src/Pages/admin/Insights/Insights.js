@@ -174,6 +174,7 @@ export default function Insights() {
   const [entries, setEntries] = useState({});
   const [editing, setEditing] = useState(null); 
   const [draft, setDraft] = useState("");
+  const [businessProcessCode, setBusinessProcessCode] = useState("");
   const [saving, setSaving] = useState(false);
   const reqId = useRef(0); 
 
@@ -256,28 +257,72 @@ export default function Insights() {
   }, [data]);
 
   const startEdit = (group, name) => {
-    setEditing(group);
+    setEditing(group ?? "__unassigned");
+    setBusinessProcessCode(group || "");
     setDraft(name || "");
     setError("");
   };
 
   const saveName = async (group) => {
+    const isUnassigned = group === null;
+
+    const code = String(
+      isUnassigned ? businessProcessCode : group
+    )
+      .trim()
+      .toUpperCase();
+
     const name = draft.trim();
+
+    if (!code) {
+      setError("Business Process Code is required.");
+      return;
+    }
+
+    if (!/^[A-Z0-9]+$/.test(code)) {
+      setError("Code must contain only letters and numbers.");
+      return;
+    }
+
+    if (code.length > 50) {
+      setError("Business Process Code can be at most 50 characters.");
+      return;
+    }
+
+    if (!name) {
+      setError("Business Process Name is required.");
+      return;
+    }
+
+    if (name.length > 100) {
+      setError("Business Process Name can be at most 100 characters.");
+      return;
+    }
+
     setSaving(true);
     setError("");
+
     try {
-      const path = `/insights/business-processes/${encodeURIComponent(group)}`;
-      if (name) await api(path, "PUT", { name });
-      else await api(path, "DELETE");
-      setData((d) => ({
-        ...d,
-        processes: d.processes.map((p) => (p.group === group ? { ...p, group_name: name || null } : p)),
-      }));
+      const result = await api(
+        `/insights/business-processes/${encodeURIComponent(code)}`,
+        "PUT",
+        { name }
+      );
+
+      console.log("Business Process saved:", result);
+
       setEditing(null);
+      setDraft("");
+      setBusinessProcessCode("");
+
+      // Reload Insights with updated Business Process name
+      await load();
+
     } catch (e) {
       setError(e.message);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const exportCsv = () => {
@@ -374,107 +419,210 @@ export default function Insights() {
               </div>
             )}
 
-            {groups.map(([group, { name, list }]) => (
-              <section className="in-group" key={group}>
-                <h2>
-                  <span className="in-chip in-mono">{group}</span>
+            
+            
+            {groups.map(([group, { name, list }]) => {
+              const isUnassigned = group === null;
+              const editKey = isUnassigned ? "__unassigned" : group;
 
-                  {editing === group ? (
-                    <span className="in-edit">
-                      <input
-                        autoFocus
-                        value={draft}
-                        maxLength={100}
-                        placeholder="Business process name"
-                        onChange={(e) => setDraft(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") saveName(group);
-                          if (e.key === "Escape") setEditing(null);
-                        }}
-                      />
-                      <button type="button" className="in-mini in-mini-on" disabled={saving} onClick={() => saveName(group)}>
-                        {saving ? "Saving..." : "Save"}
-                      </button>
-                      <button type="button" className="in-mini" disabled={saving} onClick={() => setEditing(null)}>Cancel</button>
+              return (
+                <section className="in-group" key={editKey}>
+                  <h2>
+                    <span className="in-chip in-mono">
+                      {group || "UNASSIGNED"}
                     </span>
-                  ) : (
-                    <>
-                      <span>{name || "Business Process"}</span>
-                      <button type="button" className="in-mini" onClick={() => startEdit(group, name)}>
-                        {name ? "Rename" : "Set name"}
-                      </button>
-                    </>
-                  )}
 
-                  <small>{list.length} Process ID{list.length === 1 ? "" : "s"}</small>
-                </h2>
+                    {editing === editKey ? (
+                      <span className="in-edit">
+                        {isUnassigned && (
+                          <input
+                            autoFocus
+                            value={businessProcessCode}
+                            maxLength={50}
+                            placeholder="Business Process Code (e.g. DEV)"
+                            onChange={(e) =>
+                              setBusinessProcessCode(e.target.value.toUpperCase())
+                            }
+                          />
+                        )}
 
-                {list.map((p) => (
-                  <div className={`in-proc ${open === p.process_id ? "in-open" : ""}`} key={p.process_id}>
+                        <input
+                          autoFocus={!isUnassigned}
+                          value={draft}
+                          maxLength={100}
+                          placeholder="Business Process Name"
+                          onChange={(e) => setDraft(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveName(group);
+                            if (e.key === "Escape") {
+                              setEditing(null);
+                              setBusinessProcessCode("");
+                            }
+                          }}
+                        />
+
+                        <button
+                          type="button"
+                          className="in-mini in-mini-on"
+                          disabled={saving}
+                          onClick={() => saveName(group)}
+                        >
+                          {saving ? "Saving..." : "Save"}
+                        </button>
+
+                        <button
+                          type="button"
+                          className="in-mini"
+                          disabled={saving}
+                          onClick={() => {
+                            setEditing(null);
+                            setBusinessProcessCode("");
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </span>
+                    ) : (
+                      <>
+                        <span>{name || "Business Process"}</span>
+
+                        <button
+                          type="button"
+                          className="in-mini"
+                          onClick={() => startEdit(group, name)}
+                        >
+                          {name ? "Rename" : "Set name"}
+                        </button>
+                      </>
+                    )}
+
+                    <small>
+                      {list.length} Process ID{list.length === 1 ? "" : "s"}
+                    </small>
+                  </h2>
+
+                  {/* Process ID rows */}
+                  {list.map((p) => (
                     <div
-                      role="button"
-                      tabIndex={0}
-                      className="in-prow"
-                      onClick={() => toggle(p.process_id)}
-                      onKeyDown={(e) => onRowKey(e, p.process_id)}
-                      aria-expanded={open === p.process_id}
+                      className={`in-proc ${
+                        open === p.process_id ? "in-open" : ""
+                      }`}
+                      key={p.process_id}
                     >
-                      <div className="in-pname">
-                        <span className="in-pid in-mono">{p.process_id}</span>
-                        <span>{p.name}</span>
-                        <small>{p.checklists.length > 0 ? `Used in: ${p.checklists.join(", ")}` : "No answers in this range"}</small>
-                        {p.type_conflict && (
-                          <small className="in-err">
-                            Warning: this Process ID has items with different answer types (Numeric and Yes/No).
-                            Only {p.input_type === "Numeric" ? "Numeric" : "Yes/No"} answers are counted
-                            {p.skipped_mismatch > 0 ? `; ${p.skipped_mismatch} other answers skipped` : ""}.
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        className="in-prow"
+                        onClick={() => toggle(p.process_id)}
+                        onKeyDown={(e) => onRowKey(e, p.process_id)}
+                        aria-expanded={open === p.process_id}
+                      >
+                        <div className="in-pname">
+                          <span className="in-pid in-mono">
+                            {p.process_id}
+                          </span>
+
+                          <span>{p.name}</span>
+
+                          <small>
+                            {p.checklists.length > 0
+                              ? `Used in: ${p.checklists.join(", ")}`
+                              : "No answers in this range"}
                           </small>
-                        )}
-                        {(p.item_names || []).length > 1 && !p.type_conflict && (
-                          <small>{p.item_names.length} items share this ID: {p.item_names.join(" / ")}</small>
-                        )}
-                      </div>
 
-                      <div className="in-stat">
-                        <b>{p.input_type === "Numeric" ? fmt(p.total) : `${fmt(p.yes)} Yes`}</b>
-                        <span className="in-mono">{p.input_type === "Numeric" ? "TOTAL" : `${fmt(p.no)} NO`}</span>
-                      </div>
-                      <div className="in-stat">
-                        <b>{p.input_type === "Numeric" ? fmt(p.average) : p.yes_rate === null ? "-" : `${fmt(p.yes_rate)}%`}</b>
-                        <span className="in-mono">{p.input_type === "Numeric" ? "AVERAGE" : "YES RATE"}</span>
-                      </div>
-                      <div className="in-stat">
-                        <b>{fmt(p.entries)}</b>
-                        <span className="in-mono">ENTRIES</span>
-                      </div>
-                      <div className="in-stat">
-                        <b>{p.contributors}</b>
-                        <span className="in-mono">PEOPLE</span>
-                      </div>
-                      <div className="in-trend"><Bars series={p.series} groupBy={data.group_by} /></div>
-                    </div>
+                          {p.type_conflict && (
+                            <small className="in-err">
+                              Warning: this Process ID has items with different
+                              answer types (Numeric and Yes/No).
+                              Only {p.input_type === "Numeric" ? "Numeric" : "Yes/No"} answers are counted
+                              {p.skipped_mismatch > 0
+                                ? `; ${p.skipped_mismatch} other answers skipped`
+                                : ""}.
+                            </small>
+                          )}
 
-                    {open === p.process_id && (
-                      <div className="in-detail">
-                        <div className="in-dhead in-mono">
-                          <span>
-                            {p.input_type === "Numeric" ? "NUMERIC" : "YES / NO"} • LAST ENTRY {prettyDay(p.last_entry).toUpperCase()}
+                          {(p.item_names || []).length > 1 &&
+                            !p.type_conflict && (
+                              <small>
+                                {p.item_names.length} items share this ID:{" "}
+                                {p.item_names.join(" / ")}
+                              </small>
+                            )}
+                        </div>
+
+                        <div className="in-stat">
+                          <b>
+                            {p.input_type === "Numeric"
+                              ? fmt(p.total)
+                              : `${fmt(p.yes)} Yes`}
+                          </b>
+                          <span className="in-mono">
+                            {p.input_type === "Numeric"
+                              ? "TOTAL"
+                              : `${fmt(p.no)} NO`}
                           </span>
                         </div>
-                        {(p.by_checklist || []).length > 1 && (
+
+                        <div className="in-stat">
+                          <b>
+                            {p.input_type === "Numeric"
+                              ? fmt(p.average)
+                              : p.yes_rate === null
+                                ? "-"
+                                : `${fmt(p.yes_rate)}%`}
+                          </b>
+                          <span className="in-mono">
+                            {p.input_type === "Numeric" ? "AVERAGE" : "YES RATE"}
+                          </span>
+                        </div>
+
+                        <div className="in-stat">
+                          <b>{fmt(p.entries)}</b>
+                          <span className="in-mono">ENTRIES</span>
+                        </div>
+
+                        <div className="in-stat">
+                          <b>{p.contributors}</b>
+                          <span className="in-mono">PEOPLE</span>
+                        </div>
+
+                        <div className="in-trend">
+                          <Bars series={p.series} groupBy={data.group_by} />
+                        </div>
+                      </div>
+
+                      {open === p.process_id && (
+                        <div className="in-detail">
                           <div className="in-dhead in-mono">
                             <span>
-                              BY CHECKLIST: {p.by_checklist.map((c) => `${c.name.toUpperCase()} (${c.entries})`).join(" • ")}
+                              {p.input_type === "Numeric" ? "NUMERIC" : "YES / NO"}
+                              {" • LAST ENTRY "}
+                              {prettyDay(p.last_entry).toUpperCase()}
                             </span>
                           </div>
-                        )}
-                        <Entries state={entries[p.process_id]} />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </section>
-            ))}
+
+                          {(p.by_checklist || []).length > 1 && (
+                            <div className="in-dhead in-mono">
+                              <span>
+                                BY CHECKLIST:{" "}
+                                {p.by_checklist
+                                  .map(
+                                    (c) =>
+                                      `${c.name.toUpperCase()} (${c.entries})`
+                                  )
+                                  .join(" • ")}
+                              </span>
+                            </div>
+                          )}
+
+                          <Entries state={entries[p.process_id]} />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </section>
+              );
+            })}
           </>
         )}
       </div>
