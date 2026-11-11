@@ -1030,3 +1030,20 @@
     gap: 8px 10px;
   }
 }
+
+/* Read-only submitted checklist view */
+.sc-overlay .sc-cb:disabled,
+.sc-overlay .sc-numin:disabled,
+.sc-overlay .sc-pill:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.sc-overlay .sc-numin:disabled {
+  color: var(--navy);
+  background: var(--bg);
+}
+
+.sc-overlay .sc-note:not(button) {
+  cursor: default;
+}

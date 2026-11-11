@@ -430,3 +430,180 @@
   background: none;
   color: var(--navy);
 }
+
+/* Grid/table switch and checklist status */
+.ah-view-toggle {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 16px;
+}
+.ah-view-toggle button {
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--slate);
+  font: 400 13px "Manrope", sans-serif;
+  cursor: pointer;
+}
+.ah-view-toggle button.ah-view-active {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: #fff;
+}
+.ah-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 3px 9px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.ah-status-active { background: #e4f2df; color: #28613a; }
+.ah-status-inactive { background: #fbe8e7; color: #9b3530; }
+.ah-card-inactive { opacity: .78; }
+.ah-card-inactive .ah-ctitle { color: #737b8e; }
+.ah-table-wrap {
+  width: 100%;
+  margin-top: 18px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+.ah-table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 13px;
+}
+.ah-table th, .ah-table td {
+  padding: 13px 12px;
+  border-bottom: 1px solid #e8eaf0;
+  text-align: left;
+  vertical-align: middle;
+}
+.ah-table th {
+  background: #f6f6f8;
+  color: var(--slate);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ah-table tbody tr:last-child td { border-bottom: 0; }
+.ah-table-title { min-width: 230px; color: var(--navy); font-weight: 600; }
+.ah-table-checklist-name { color: var(--navy); font-weight: 600; }
+.ah-table-submeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 6px;
+  color: var(--slate);
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.ah-table-submeta strong { color: var(--muted); font-weight: 600; }
+.ah-row-inactive { background: #fafafa; color: #81889a; }
+.ah-table-actions { display: flex; gap: 10px; white-space: nowrap; }
+.ah-table-actions button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: 400 12px "Manrope", sans-serif;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.ah-status-backdrop {
+  position: fixed;
+  z-index: 2000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 25, 45, .48);
+}
+.ah-status-modal {
+  box-sizing: border-box;
+  width: min(100%, 430px);
+  padding: 26px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 18px 55px rgba(15, 25, 45, .2);
+}
+.ah-status-modal h2 { margin: 0 0 8px; font-size: 21px; font-weight: 500; }
+.ah-status-modal p { margin: 0 0 22px; color: var(--slate); font-size: 14px; }
+.ah-status-modal label { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 600; }
+.ah-status-modal select {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--navy);
+  font: 400 14px "Manrope", sans-serif;
+}
+.ah-status-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+.ah-status-modal-actions button {
+  padding: 9px 16px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--navy);
+  font: 500 13px "Manrope", sans-serif;
+  cursor: pointer;
+}
+.ah-status-modal-actions .ah-status-save { border-color: var(--navy); background: var(--navy); color: #fff; }
+.ah-status-modal-actions button:disabled { cursor: not-allowed; opacity: .6; }
+.ah-status-error { margin-top: 12px; color: #b42318; font-size: 13px; }
+@media (max-width: 760px) {
+  .ah-view-toggle { justify-content: flex-start; }
+  .ah-table { min-width: 820px; }
+}
+
+/* Checklist status and submission filters */
+.ah-list-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 14px;
+  margin-top: 24px;
+}
+.ah-list-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--slate);
+  font-size: 12px;
+}
+.ah-list-filters select {
+  min-width: 175px;
+  padding: 9px 32px 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--navy);
+  font: 400 13px "Manrope", sans-serif;
+}
+.ah-list-group { margin-top: 22px; }
+.ah-list-group-title {
+  margin: 0 0 12px;
+  color: var(--navy);
+  font-size: 16px;
+  font-weight: 500;
+}
+.ah-list-group .ah-grid,
+.ah-list-group .ah-table-wrap { margin-top: 0; }
+.ah-list-group + .ah-list-group { margin-top: 30px; }
+
+
+.ah-submission-count {
+  min-width: 115px;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

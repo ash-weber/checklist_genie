@@ -250,6 +250,7 @@ const getMyChecklists = async (req, res) => {
       checklists: templates.map((t) => {
         const mine = subs.filter((s) => s.checklist_template_id === t.id);
         const todaySub = mine.find((s) => s.selected_date.getTime() === todayMs);
+        const latestSubmitted = mine.find((s) => s.status === "SUBMITTED");
         const teamsOf = effectiveTeams(t, orgTeams);
         const due = legacyDue(t);
         return {
@@ -275,6 +276,7 @@ const getMyChecklists = async (req, res) => {
               }
             : null,
           ever_submitted: mine.some((s) => s.status === "SUBMITTED"),
+          latest_submission_date: latestSubmitted ? toDateOnly(latestSubmitted.selected_date) : null,
         };
       }),
     });

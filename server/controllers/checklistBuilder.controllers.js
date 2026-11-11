@@ -494,9 +494,10 @@ const getChecklists = async (req, res) => {
   try {
     const { organisation_id } = req.user;
 
-    const [templates, orgTeams] = await Promise.all([
+    const [templates, orgTeams, latestSubmissions] = await Promise.all([
+      // Admin workspace includes inactive checklists so their status can be managed.
       prisma.checklist_template.findMany({
-        where: { organisation_id, is_archived: false },
+        where: { organisation_id },
         orderBy: { created_at: "desc" },
         include: {
           ListTypes: true,
@@ -505,7 +506,26 @@ const getChecklists = async (req, res) => {
         },
       }),
       prisma.team.findMany({ where: { organisation_id } }),
+      prisma.checklist_submission.groupBy({
+        by: ["checklist_template_id"],
+        where: {
+          ChecklistTemplate: { organisation_id },
+          submitted_at: { not: null },
+          status: "SUBMITTED",
+        },
+        _max: { submitted_at: true },
+        _count: { _all: true },
+      }),
     ]);
+    const submissionStatsByChecklist = new Map(
+      latestSubmissions.map((row) => [
+        row.checklist_template_id,
+        {
+          lastSubmittedAt: row._max.submitted_at,
+          submissionsCount: row._count._all,
+        },
+      ])
+    );
 
     res.status(200).json({
       checklists: templates.map((t) => {
@@ -514,6 +534,9 @@ const getChecklists = async (req, res) => {
         return {
           id: t.id,
           title: t.template_name,
+          is_active: !t.is_archived,
+          last_submitted_at: submissionStatsByChecklist.get(t.id)?.lastSubmittedAt || null,
+          submissions_count: submissionStatsByChecklist.get(t.id)?.submissionsCount || 0,
           due_date: due.due_date,
           recurrence: due.recurrence,
           recurrence_custom_days: t.recurrence_custom_days,
@@ -530,6 +553,39 @@ const getChecklists = async (req, res) => {
   } catch (error) {
     console.error("Error in getChecklists:", error);
     res.status(500).json({ error: "Failed to fetch checklists." });
+  }
+};
+
+// PATCH /checklists/:id/status — activate/deactivate a checklist.
+const updateChecklistStatus = async (req, res) => {
+  try {
+    const { organisation_id } = req.user;
+    const id = Number.parseInt(req.params.id, 10);
+    const { is_active } = req.body || {};
+
+    if (!Number.isInteger(id) || id <= 0 || typeof is_active !== "boolean") {
+      return res.status(400).json({ error: "A valid checklist ID and is_active boolean are required." });
+    }
+
+    const existing = await prisma.checklist_template.findFirst({
+      where: { id, organisation_id },
+      select: { id: true },
+    });
+    if (!existing) return res.status(404).json({ error: "Checklist not found." });
+
+    await prisma.checklist_template.update({
+      where: { id },
+      data: { is_archived: !is_active },
+    });
+
+    return res.status(200).json({
+      message: `Checklist ${is_active ? "activated" : "deactivated"} successfully.`,
+      id,
+      is_active,
+    });
+  } catch (error) {
+    console.error("Error in updateChecklistStatus:", error);
+    return res.status(500).json({ error: "Failed to update checklist status." });
   }
 };
 
@@ -619,6 +675,7 @@ module.exports = {
   updateChecklist,
   setItemHidden,
   getChecklists,
+  updateChecklistStatus,
   getChecklistById,
   searchItemsByProcessId,
 };

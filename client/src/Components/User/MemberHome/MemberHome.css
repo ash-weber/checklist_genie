@@ -475,3 +475,203 @@
     padding: 12px 14px 10px;
   }
 }
+
+/* Collapsible workspace sections */
+.mr-today-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--navy);
+  cursor: pointer;
+  text-align: left;
+}
+
+.mr-today-toggle h2 {
+  margin: 0;
+  font: inherit;
+}
+
+.mr-chevron {
+  display: inline-block;
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 19px;
+  line-height: 1;
+  transform: rotate(-90deg);
+  transition: transform .18s ease;
+}
+
+.mr-chevron-open {
+  transform: rotate(0deg);
+}
+
+.mr-sech {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mr-submit-btn {
+  flex: none;
+  padding: 5px 11px;
+  border: 1px solid #cbd3e2;
+  border-radius: 4px;
+  background: #fff;
+  color: var(--navy);
+  font: 500 11px "Manrope", sans-serif;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+
+.mr-submit-btn:hover {
+  border-color: var(--navy);
+  background: #eef1f7;
+}
+
+.mr-submit-btn:focus-visible,
+.mr-sech:focus-visible,
+.mr-today-toggle:focus-visible {
+  outline: 2px solid #7186b7;
+  outline-offset: 3px;
+}
+
+.mr-card {
+  cursor: default;
+}
+
+.mr-page .mr-card:hover {
+  background: var(--bg);
+}
+
+@media (max-width: 640px) {
+  .mr-today-toggle {
+    order: 1;
+  }
+}
+
+
+/* Refined section controls and checklist submit placement */
+.mr-trow {
+  position: relative;
+  gap: 12px;
+}
+
+.mr-today-toggle {
+  flex: 0 0 auto;
+}
+
+.mr-overdue-link,
+.mr-nolate {
+  margin-left: auto;
+  align-self: flex-start;
+  transform: translateY(-5px);
+}
+
+.mr-section-arrow {
+  display: grid;
+  place-items: center;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  margin-left: 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mr-chevron {
+  width: 9px;
+  height: 9px;
+  margin: 0;
+  border-right: 2px solid #8290ad;
+  border-bottom: 2px solid #8290ad;
+  font-size: 0;
+  line-height: 0;
+  transform: rotate(45deg);
+  transition: transform .18s ease;
+}
+
+.mr-chevron-open {
+  transform: rotate(225deg);
+}
+
+.mr-section-arrow:hover .mr-chevron,
+.mr-sech:hover .mr-chevron {
+  border-color: var(--navy);
+}
+
+.mr-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.mr-card .mr-tags {
+  margin-top: auto;
+}
+
+.mr-card .mr-meta {
+  margin-top: 8px;
+}
+
+.mr-card-actions .mr-submit-btn {
+  min-width: 82px;
+}
+
+@media (max-width: 640px) {
+  .mr-overdue-link,
+  .mr-nolate {
+    margin-left: auto;
+    transform: none;
+  }
+
+  .mr-section-arrow {
+    margin-left: 0;
+  }
+}
+
+
+/* Completed checklist: clickable green submitted indicator */
+.mr-view-submitted {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin: -5px -7px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mr-view-submitted:hover {
+  background: #eaf6ee;
+}
+
+.mr-view-submitted:focus-visible {
+  outline: 2px solid #3fae6a;
+  outline-offset: 2px;
+}
+
+.mr-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.mr-card .mr-tags {
+  margin-top: auto;
+}
+
+.mr-card-actions .mr-submit-btn {
+  min-width: 82px;
+}

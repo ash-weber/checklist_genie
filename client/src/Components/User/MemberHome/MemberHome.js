@@ -31,7 +31,9 @@ function nextDue(c, today) {
   const end = c.recurrence_ends_on ? parseDay(c.recurrence_ends_on) : null;
   let d = null;
 
-  if (rec === "WORKDAYS" || rec === "CUSTOM") {
+  if (rec === "DAILY") {
+    d = new Date(today);
+  } else if (rec === "WORKDAYS" || rec === "CUSTOM") {
     const allowed = rec === "WORKDAYS"
       ? ["MON", "TUE", "WED", "THU", "FRI"]
       : String(c.recurrence_custom_days || "").split(",").map((s) => s.trim()).filter(Boolean);
@@ -89,16 +91,26 @@ const StatusIcon = ({ s, tone }) => {
   );
 };
 
-function Card({ c, onOpen }) {
+function Card({ c, onOpen, onView, showSubmit = false, showCompleted = false }) {
   const rec = RECURRENCE[c.recurrence];
   const types = (c.list_types || []).map((l) => LIST_TYPE[l] || l);
   const showDate = (c.overdue || c.diff > 0) && c.status !== "done";
   const tagBg = c.tone ? c.tone.bg : "#e3e5ec";
   return (
-    <button type="button" className="mr-card" onClick={() => onOpen(c)}>
+    <article className="mr-card">
       <div className="mr-ctop">
         <p>{c.title}</p>
-        <StatusIcon s={c.status} tone={c.tone} />
+        {showCompleted && (
+          <button
+            type="button"
+            className="mr-view-submitted"
+            onClick={() => onView(c)}
+            aria-label={`View submitted ${c.title}`}
+            title="View submitted checklist"
+          >
+            <StatusIcon s="done" />
+          </button>
+        )}
       </div>
       <div className="mr-tags">
         {types.slice(0, 2).map((t) => (
@@ -108,27 +120,49 @@ function Card({ c, onOpen }) {
       {(showDate || rec) && (
         <div className="mr-meta">
           {showDate && <span className={c.overdue ? "mr-late" : ""}>{dateLabel(c.next)}</span>}
-          {showDate && rec && " \u2022 "}
+          {showDate && rec && " \\u2022 "}
           {rec && <span>Repeats: {rec}</span>}
         </div>
       )}
-    </button>
+      {showSubmit && (
+        <div className="mr-card-actions">
+          <button
+            type="button"
+            className="mr-submit-btn"
+            onClick={() => onOpen(c)}
+            aria-label={`Submit ${c.title}`}
+          >
+            Submit
+          </button>
+        </div>
+      )}
+    </article>
   );
 }
 
-function Section({ label, open, onToggle, empty, items, onOpen }) {
+function Section({ label, open, onToggle, empty, items, onOpen, onView, showCompleted = false }) {
   return (
     <section className="mr-sec">
-      <button type="button" className={`mr-sech ${open ? "mr-open" : ""}`} onClick={onToggle} aria-expanded={open}>
-        {label}
+      <button
+        type="button"
+        className={`mr-sech ${open ? "mr-open" : ""}`}
+        onClick={onToggle}
+        aria-expanded={open}
+      >
+        <span>{label}</span>
+        <span className={`mr-chevron ${open ? "mr-chevron-open" : ""}`} aria-hidden="true" />
       </button>
-      {open && (items.length ? <Grid items={items} onOpen={onOpen} /> : <div className="mr-empty">{empty}</div>)}
+      {open && (items.length ? <Grid items={items} onOpen={onOpen} onView={onView} showSubmit={false} showCompleted={showCompleted} /> : <div className="mr-empty">{empty}</div>)}
     </section>
   );
 }
 
-const Grid = ({ items, onOpen }) => (
-  <div className="mr-grid">{items.map((c) => <Card key={c.id} c={c} onOpen={onOpen} />)}</div>
+const Grid = ({ items, onOpen, onView, showSubmit = false, showCompleted = false }) => (
+  <div className="mr-grid">
+    {items.map((c) => (
+      <Card key={c.id} c={c} onOpen={onOpen} onView={onView} showSubmit={showSubmit} showCompleted={showCompleted} />
+    ))}
+  </div>
 );
 
 export default function MemberHome() {
@@ -139,6 +173,7 @@ export default function MemberHome() {
   const [teamId, setTeamId] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [open, setOpen] = useState(null);
+  const [viewSubmitted, setViewSubmitted] = useState(null);
   const [show, setShow] = useState({});
   const [showDone, setShowDone] = useState(false);
   const [overdueOnly, setOverdueOnly] = useState(false);
@@ -198,20 +233,49 @@ export default function MemberHome() {
     lists
       .filter((c) => !teamId || (c.shared_team_ids || []).includes(teamId))
       .forEach((c) => {
-        const next = nextDue(c, today);
-        if (!next) return;
         const sub = c.today_submission;
-        const submittedToday = sub && sub.status === "SUBMITTED";
+        const submittedToday = Boolean(sub && sub.status === "SUBMITTED");
         const oneOffDone = c.recurrence === "NONE" && c.ever_submitted;
-        const status = submittedToday || oneOffDone ? "done" : sub && sub.response_count > 0 ? "progress" : "new";
-        const diff = Math.round((next - today) / MS_DAY);
+        const completed = submittedToday || oneOffDone;
+
+        // A completed daily/weekday checklist rolls forward to its next occurrence.
+        // It should not remain in Today or the Completed bucket for the rest of the day.
+        const rollsDaily = submittedToday && ["DAILY", "WORKDAYS"].includes(c.recurrence || "");
+        const dueBase = rollsDaily
+          ? nextDue(c, new Date(today.getTime() + MS_DAY))
+          : nextDue(c, today);
+        if (!dueBase) return;
+
+        const status = completed ? "done" : sub && sub.response_count > 0 ? "progress" : "new";
+        const diff = Math.round((dueBase - today) / MS_DAY);
         const tIdx = teams.findIndex((t) => (c.shared_team_ids || []).includes(t.id));
         const tone = teams.length > 1 && tIdx >= 0 ? PALETTE[tIdx % PALETTE.length] : null;
-        const item = { ...c, next, status, diff, tone, nextISO: iso(next), overdue: false };
-        if (status === "done") {
+        const item = {
+          ...c,
+          next: dueBase,
+          status,
+          diff,
+          tone,
+          nextISO: iso(dueBase),
+          overdue: false,
+          submittedDate: c.latest_submission_date || (submittedToday ? iso(today) : null),
+        };
+
+        // Keep today's successful submission visible in Completed, while also
+        // scheduling the next daily/weekday occurrence in Upcoming.
+        if (completed) {
           if (submittedToday) b.doneToday += 1;
-          return b.done.push(item);
+          b.done.push({
+            ...item,
+            next: today,
+            diff: 0,
+            nextISO: iso(today),
+            status: "done",
+            submittedDate: c.latest_submission_date || iso(today),
+          });
+          if (!rollsDaily) return;
         }
+
         if (diff < 0) { item.overdue = true; b.overdue += 1; b.today.unshift(item); }
         else if (diff === 0) b.today.push(item);
         else if (diff <= 7) b.upcoming.push(item);
@@ -253,7 +317,14 @@ export default function MemberHome() {
               ""
             )}
           <div className={`mr-trow mr-top ${firstTime ? "mr-plain" : ""}`}>
-            <h2>Today</h2>
+            <button
+              type="button"
+              className="mr-today-toggle"
+              onClick={() => setShow((s) => ({ ...s, today: !(s.today ?? true) }))}
+              aria-expanded={show.today ?? true}
+            >
+              <h2>Today</h2>
+            </button>
             {teams.length > 1 && (
               <nav className={`mr-teams mr-mono ${firstTime ? "mr-faint" : ""}`} aria-label="Teams">
                 {teams.map((t, i) => (
@@ -271,12 +342,21 @@ export default function MemberHome() {
               </nav>
             )}
             {!firstTime && buckets.overdue > 0 ? (
-              <button type="button" className="mr-link mr-right" onClick={() => setOverdueOnly((v) => !v)}>
+              <button type="button" className="mr-link mr-overdue-link" onClick={() => setOverdueOnly((v) => !v)}>
                 {overdueOnly ? "Show all" : `${buckets.overdue} Overdue`}
               </button>
             ) : (
-              <span className="mr-nolate">No Overdue</span>
+              <span className="mr-nolate mr-overdue-link">No Overdue</span>
             )}
+            <button
+              type="button"
+              className="mr-section-arrow"
+              onClick={() => setShow((s) => ({ ...s, today: !(s.today ?? true) }))}
+              aria-label={(show.today ?? true) ? "Collapse Today section" : "Expand Today section"}
+              aria-expanded={show.today ?? true}
+            >
+              <span className={`mr-chevron ${(show.today ?? true) ? "mr-chevron-open" : ""}`} aria-hidden="true" />
+            </button>
           </div>
 
           {firstTime ? (
@@ -285,10 +365,12 @@ export default function MemberHome() {
             </div>
           ) : (
             <>
-              {loaded && todayItems.length > 0 ? (
-                <Grid items={todayItems} onOpen={setOpen} />
-              ) : (
-                loaded && <div className="mr-empty">All done for today. Nothing due.</div>
+              {(show.today ?? true) && (
+                loaded && todayItems.length > 0 ? (
+                  <Grid items={todayItems} onOpen={setOpen} showSubmit />
+                ) : (
+                  loaded && <div className="mr-empty">All done for today. Nothing due.</div>
+                )
               )}
 
               <Section label="Upcoming" open={show.upcoming ?? buckets.upcoming.length > 0}
@@ -299,23 +381,15 @@ export default function MemberHome() {
                 onToggle={() => setShow((s) => ({ ...s, scheduled: !(s.scheduled ?? buckets.scheduled.length > 0) }))}
                 items={buckets.scheduled} onOpen={setOpen} empty="Nothing scheduled further out." />
 
-              {showDone && (
-                <Section label="Completed" open onToggle={() => setShowDone(false)}
-                  items={buckets.done} onOpen={setOpen} empty="No completed checklists yet." />
-              )}
+              <Section label="Completed" open={show.completed ?? false}
+                onToggle={() => setShow((s) => ({ ...s, completed: !(s.completed ?? false) }))}
+                items={buckets.done} onOpen={setOpen} onView={setViewSubmitted}
+                showCompleted empty="No completed checklists yet." />
             </>
           )}
         </main>
 
         <footer className="mr-foot">
-          <button
-            type="button"
-            className={`mr-link ${firstTime ? "mr-faintlink" : ""}`}
-            disabled={firstTime}
-            onClick={() => setShowDone((v) => !v)}
-          >
-            Completed Checklists
-          </button>
           {buckets.doneToday > 0 && (
             <div className="mr-act">(Today's Activity: {buckets.doneToday} List{buckets.doneToday > 1 ? "s" : ""})</div>
           )}
@@ -328,6 +402,15 @@ export default function MemberHome() {
           dueDate={open.nextISO}
           onClose={() => { setOpen(null); load(); }}
           onDone={load}
+        />
+      )}
+      {viewSubmitted && (
+        <SubmitChecklistModal
+          checklistId={viewSubmitted.id}
+          dueDate={viewSubmitted.submittedDate || viewSubmitted.latest_submission_date}
+          initialDate={viewSubmitted.submittedDate || viewSubmitted.latest_submission_date}
+          viewOnly
+          onClose={() => setViewSubmitted(null)}
         />
       )}
     </div>

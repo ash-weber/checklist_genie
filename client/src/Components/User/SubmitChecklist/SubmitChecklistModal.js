@@ -75,7 +75,7 @@ function useFit(dep) {
   return [ref, { transform: `scale(${scale})` }];
 }
 
-function NoteBox({ value, editing, onEdit, onChange, onClose }) {
+function NoteBox({ value, editing, onEdit, onChange, onClose, readOnly = false }) {
   if (editing) {
     return (
       <div className="sc-note sc-note-edit">
@@ -92,6 +92,9 @@ function NoteBox({ value, editing, onEdit, onChange, onClose }) {
     );
   }
   const has = value.trim();
+  if (readOnly) {
+    return <div className={`sc-note ${has ? "sc-has" : ""}`}>{has || "—"}</div>;
+  }
   return (
     <button type="button" className={`sc-note ${has ? "sc-has" : ""}`} onClick={onEdit}>
       {has || "+"}
@@ -99,9 +102,9 @@ function NoteBox({ value, editing, onEdit, onChange, onClose }) {
   );
 }
 
-export default function SubmitChecklistModal({ checklistId, dueDate, onClose, onDone }) {
+export default function SubmitChecklistModal({ checklistId, dueDate, initialDate, viewOnly = false, onClose, onDone }) {
   const today = iso(new Date());
-  const [entryDate, setEntryDate] = useState(today);
+  const [entryDate, setEntryDate] = useState(initialDate || today);
   const [data, setData] = useState(null);
   const [loadErr, setLoadErr] = useState("");
   const [vals, setVals] = useState({});
@@ -247,10 +250,12 @@ export default function SubmitChecklistModal({ checklistId, dueDate, onClose, on
             inputMode="decimal"
             placeholder="000"
             value={v.input}
+            disabled={viewOnly}
             onChange={(e) => setVal(id, { input: e.target.value.replace(/[^0-9.-]/g, "") })}
           />
         ) : (
           <button type="button" className={`sc-cb ${v.input === "Yes" ? "sc-on" : ""}`} aria-label="Mark as done"
+            disabled={viewOnly}
             onClick={() => setVal(id, { input: v.input === "Yes" ? "" : "Yes" })}>
             {v.input === "Yes" && <Ico n="check" s={13} />}
           </button>
@@ -265,9 +270,11 @@ export default function SubmitChecklistModal({ checklistId, dueDate, onClose, on
           onEdit={() => setNoteOpen(id)}
           onChange={(note) => setVal(id, { note })}
           onClose={() => setNoteOpen(null)}
+          readOnly={viewOnly}
         />
         <div className="sc-sendc">
-          {sentNow ? <span className="sc-sent">Item Sent</span>
+          {viewOnly ? <span className="sc-sent">Submitted</span>
+            : sentNow ? <span className="sc-sent">Item Sent</span>
             : can ? <button type="button" className="sc-send" disabled={busy} onClick={() => sendItems([it])}>Send</button>
             : <span className="sc-send sc-off">Send</span>}
         </div>
@@ -294,7 +301,7 @@ export default function SubmitChecklistModal({ checklistId, dueDate, onClose, on
     <div className="sc-overlay">
       <div className="sc-modal" ref={fitRef} style={fitStyle}>
         <button type="button" className="sc-x" onClick={onClose} aria-label="Close"><Ico n="x" s={20} /></button>
-        <h2 className="sc-title">{data ? data.title : "\u00A0"}</h2>
+        <h2 className="sc-title">{data ? (viewOnly ? `Submitted: ${data.title}` : data.title) : "\u00A0"}</h2>
         <div>
           {data && data.list_types.map((l) => (
             <span key={l} className="sc-chip sc-mono">{(LIST_TYPE[l] || l).toUpperCase()}</span>
@@ -304,11 +311,14 @@ export default function SubmitChecklistModal({ checklistId, dueDate, onClose, on
         <div className="sc-meta">
           <span className="sc-pdate">
             <Ico n="cal" s={16} />
-            <button type="button" className="sc-pill" onClick={openDate}>
-              <span>Entry for {entryDate === today ? "Today, " : ""}{fmtLong(entryDate)}</span><Ico n="chev" s={12} />
+            <button type="button" className="sc-pill" onClick={viewOnly ? undefined : openDate} disabled={viewOnly}>
+              <span>{viewOnly ? "Submitted on " : "Entry for "}{entryDate === today ? "Today, " : ""}{fmtLong(entryDate)}</span>
+              {!viewOnly && <Ico n="chev" s={12} />}
             </button>
-            <input ref={dateRef} className="sc-datein" type="date" max={today} value={entryDate}
-              onChange={(e) => e.target.value && setEntryDate(e.target.value)} tabIndex={-1} />
+            {!viewOnly && (
+              <input ref={dateRef} className="sc-datein" type="date" max={today} value={entryDate}
+                onChange={(e) => e.target.value && setEntryDate(e.target.value)} tabIndex={-1} />
+            )}
           </span>
           {due && (
             <span className="sc-mono sc-due">
@@ -333,7 +343,7 @@ export default function SubmitChecklistModal({ checklistId, dueDate, onClose, on
           {nums.map(renderRow)}
         </div>
 
-        <div className="sc-foot">
+        {!viewOnly && <div className="sc-foot">
           <div className="sc-footl">
             {error && step !== "final" ? <span className="sc-err sc-mono">{error}</span>
               : showWarn ? (
@@ -351,9 +361,9 @@ export default function SubmitChecklistModal({ checklistId, dueDate, onClose, on
               Send Checklist
             </button>
           )}
-        </div>
+        </div>}
 
-        <div className={`sc-final ${step === "final" ? "" : "sc-hide"}`}>
+        {!viewOnly && <div className={`sc-final ${step === "final" ? "" : "sc-hide"}`}>
           <div className="sc-ftitle">Before you send</div>
           <label className="sc-flabel sc-mono">CHECKLIST NOTE (OPTIONAL) • INCLUDED IN THE EMAIL</label>
           <div className="sc-tools" onMouseDown={(e) => e.preventDefault()}>
@@ -384,7 +394,7 @@ export default function SubmitChecklistModal({ checklistId, dueDate, onClose, on
               {busy ? "Sending..." : "Send Checklist"}
             </button>
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   );

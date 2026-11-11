@@ -6,6 +6,7 @@ const {
   updateChecklist,
   setItemHidden,
   getChecklists,
+  updateChecklistStatus,
   getChecklistById,
   searchItemsByProcessId,
 } = require("../controllers/checklistBuilder.controllers");
@@ -16,6 +17,7 @@ router.use(authentication);
 
 
 router.get("/", attachOrganisation, getChecklists);
+router.patch("/:id/status", requireAdmin, updateChecklistStatus);
 router.get("/items/search", requireAdmin, searchItemsByProcessId);
 router.get("/:id", attachOrganisation, getChecklistById);
 

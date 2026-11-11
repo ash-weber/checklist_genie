@@ -71,7 +71,25 @@ function nextDue(c, today) {
   return end && d > end ? null : d;
 }
 
-function Card({ c, onRecipients, onEdit }) {
+const formatSubmittedDate = (value) => {
+  if (!value) return "Never";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Never";
+  return `${DAY_SHORT[date.getDay()]} ${date.getDate()} ${MONTH_SHORT[date.getMonth()]} ${date.getFullYear()}`;
+};
+
+function ChecklistMeta({ c }) {
+  return (
+    <>
+      <span className="ah-cdate">Last submitted: {formatSubmittedDate(c.last_submitted_at)}</span>
+      <span className={`ah-status ${c.is_active ? "ah-status-active" : "ah-status-inactive"}`}>
+        {c.is_active ? "Active" : "Inactive"}
+      </span>
+    </>
+  );
+}
+
+function Card({ c, onRecipients, onEdit, onStatusEdit }) {
   const when = c.next || (c.due_date ? parseDay(c.due_date) : null);
   const rep = REPEAT[c.recurrence];
   const firstType = c.list_types && c.list_types[0];
@@ -81,7 +99,7 @@ function Card({ c, onRecipients, onEdit }) {
       ? POSITION[c.position] || c.position
       : null;
   return (
-    <div className="ah-card">
+    <div className={`ah-card ${c.is_active ? "" : "ah-card-inactive"}`}>
       <p className="ah-ctitle">{c.title}</p>
       <div className="ah-cmeta">
         <span className="ah-cteam">{(c.shared_to || []).join(", ")}</span>
@@ -89,16 +107,101 @@ function Card({ c, onRecipients, onEdit }) {
         <span className="ah-cdate">
           {when ? dateLabel(when) : "No due date"}{rep ? ` • Repeats: ${rep}` : ""}
         </span>
+        <ChecklistMeta c={c} />
       </div>
       <div className="ah-cactions">
-        <button type="button" className="ah-rcpt" onClick={() => onEdit(c.id)}>
-          Edit
-        </button>
-        <button type="button" className="ah-rcpt" onClick={() => onRecipients(c.id)}>
-          Recipients
-        </button>
+        <button type="button" className="ah-rcpt" onClick={() => onEdit(c.id)}>Edit</button>
+        <button type="button" className="ah-rcpt" onClick={() => onRecipients(c.id)}>Recipients</button>
+        <button type="button" className="ah-rcpt" onClick={() => onStatusEdit(c)}>Status</button>
       </div>
     </div>
+  );
+}
+
+function ChecklistTable({ rows, onRecipients, onEdit, onStatusEdit }) {
+  return (
+    <div className="ah-table-wrap">
+      <table className="ah-table">
+        <thead>
+          <tr>
+            <th>Checklist</th><th>Due / Recurrence</th><th>Last Submitted</th><th>No. of Submissions</th><th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((c) => {
+            const firstType = c.list_types && c.list_types[0];
+            const tag = firstType ? (LIST_TYPE[firstType] || firstType) : c.position ? (POSITION[c.position] || c.position) : "—";
+            const when = c.next || (c.due_date ? parseDay(c.due_date) : null);
+            const rep = REPEAT[c.recurrence];
+            return (
+              <tr key={c.id} className={!c.is_active ? "ah-row-inactive" : ""}>
+                <td className="ah-table-title">
+                  <div className="ah-table-checklist-name">{c.title}</div>
+                  <div className="ah-table-submeta">
+                    <span><strong>Team:</strong> {(c.shared_to || []).join(", ") || "—"}</span>
+                    <span><strong>Category:</strong> {tag}</span>
+                  </div>
+                </td>
+                <td>{when ? dateLabel(when) : "No due date"}{rep ? ` • ${rep}` : ""}</td>
+                <td>{formatSubmittedDate(c.last_submitted_at)}</td>
+                <td className="ah-submission-count">{Number(c.submissions_count || 0).toLocaleString("en-IN")}</td>
+                <td><span className={`ah-status ${c.is_active ? "ah-status-active" : "ah-status-inactive"}`}>{c.is_active ? "Active" : "Inactive"}</span></td>
+                <td>
+                  <div className="ah-table-actions">
+                    <button type="button" onClick={() => onEdit(c.id)}>Edit</button>
+                    <button type="button" onClick={() => onRecipients(c.id)}>Recipients</button>
+                    <button type="button" onClick={() => onStatusEdit(c)}>Status</button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ChecklistCollection({ rows, view, onViewChange, onRecipients, onEdit, onStatusEdit, statusFilter }) {
+  const hasSubmission = (c) => c.last_submitted_at && !Number.isNaN(new Date(c.last_submitted_at).getTime());
+  const sortByLatestSubmission = (items) => items.sort((a, b) => {
+    const aTime = hasSubmission(a) ? new Date(a.last_submitted_at).getTime() : 0;
+    const bTime = hasSubmission(b) ? new Date(b.last_submitted_at).getTime() : 0;
+    return bTime - aTime || String(a.title || "").localeCompare(String(b.title || ""));
+  });
+
+  // Keep active and inactive checklists in separate groups. Inactive items must
+  // never be folded into the active "Never Submitted" group.
+  const activeRows = rows.filter((c) => c.is_active === true || c.is_active === 1 || c.is_active === "1");
+  const inactiveRows = rows.filter((c) => !(c.is_active === true || c.is_active === 1 || c.is_active === "1"));
+  const activeRecentlySubmitted = sortByLatestSubmission(activeRows.filter(hasSubmission));
+  const activeNeverSubmitted = activeRows
+    .filter((c) => !hasSubmission(c))
+    .sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+  const inactiveChecklists = sortByLatestSubmission([...inactiveRows]);
+
+  const renderRows = (items) => view === "grid" ? (
+    <div className="ah-grid">{items.map((c) => <Card key={c.id} c={c} onRecipients={onRecipients} onEdit={onEdit} onStatusEdit={onStatusEdit} />)}</div>
+  ) : <ChecklistTable rows={items} onRecipients={onRecipients} onEdit={onEdit} onStatusEdit={onStatusEdit} />;
+
+  const renderGroup = (title, items) => items.length > 0 && (
+    <div className="ah-list-group">
+      <h3 className="ah-list-group-title">{title}</h3>
+      {renderRows(items)}
+    </div>
+  );
+
+  return (
+    <>
+      <div className="ah-view-toggle" role="group" aria-label="Checklist view">
+        <button type="button" className={view === "grid" ? "ah-view-active" : ""} onClick={() => onViewChange("grid")} aria-pressed={view === "grid"}>▦ Grid</button>
+        <button type="button" className={view === "table" ? "ah-view-active" : ""} onClick={() => onViewChange("table")} aria-pressed={view === "table"}>☷ Table</button>
+      </div>
+      {renderGroup("Active Checklists – Recently Submitted", activeRecentlySubmitted)}
+      {renderGroup("Active Checklists", activeNeverSubmitted)}
+      {renderGroup("Inactive Checklists", inactiveChecklists)}
+      {rows.length === 0 && <div className="ah-empty ah-mono">NO CHECKLISTS MATCH THE SELECTED FILTERS</div>}
+    </>
   );
 }
 
@@ -117,7 +220,14 @@ export default function AdminHome() {
   const [teamId, setTeamId] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [showNew, setShowNew] = useState(false);
-  const [editId, setEditId] = useState(null); 
+  const [editId, setEditId] = useState(null);
+  const [listView, setListView] = useState("grid");
+  const [checklistStatusFilter, setChecklistStatusFilter] = useState("active");
+  const [submissionFilter, setSubmissionFilter] = useState("all");
+  const [statusChecklist, setStatusChecklist] = useState(null);
+  const [statusValue, setStatusValue] = useState(true);
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [statusError, setStatusError] = useState("");
 
   const token = localStorage.getItem("token");
   const initial = useMemo(() => {
@@ -158,8 +268,16 @@ export default function AdminHome() {
   const rows = useMemo(() => lists.map((c) => ({ ...c, next: nextDue(c, today) })), [lists, today]);
   const inTeam = (c) => !teamId || (c.shared_team_ids || []).includes(teamId);
 
-  const todays = rows.filter((c) => inTeam(c) && c.next && c.next.getTime() === today.getTime());
-  const teamLists = teamId ? rows.filter(inTeam) : [];
+  const filteredRows = useMemo(() => {
+    let result = rows;
+    if (checklistStatusFilter !== "all") {
+      result = result.filter((c) => checklistStatusFilter === "active" ? Boolean(c.is_active) : !Boolean(c.is_active));
+    }
+    if (submissionFilter === "submitted") result = result.filter((c) => c.last_submitted_at && !Number.isNaN(new Date(c.last_submitted_at).getTime()));
+    if (submissionFilter === "never") result = result.filter((c) => !c.last_submitted_at || Number.isNaN(new Date(c.last_submitted_at).getTime()));
+    return result;
+  }, [rows, checklistStatusFilter, submissionFilter]);
+  const teamLists = teamId ? filteredRows.filter(inTeam) : [];
   const tiles = teams.map((t) => ({
     ...t,
     n: lists.filter((c) => (c.shared_team_ids || []).includes(t.id)).length,
@@ -169,6 +287,31 @@ export default function AdminHome() {
   const go = (path) => { if (path) navigate(path); };
   const openRecipients = (id) => navigate(`/admin/templaterecepients/${id}`);
   const closeModal = () => { setShowNew(false); setEditId(null); load(); };
+  const openStatusEditor = (checklist) => {
+    setStatusChecklist(checklist);
+    setStatusValue(Boolean(checklist.is_active));
+    setStatusError("");
+  };
+  const saveChecklistStatus = async () => {
+    if (!statusChecklist || statusSaving) return;
+    setStatusSaving(true);
+    setStatusError("");
+    try {
+      const response = await fetch(`${BASE_URL}/checklists/${statusChecklist.id}/status`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: statusValue }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Unable to update checklist status.");
+      setStatusChecklist(null);
+      await load();
+    } catch (error) {
+      setStatusError(error.message || "Unable to update checklist status.");
+    } finally {
+      setStatusSaving(false);
+    }
+  };
 
   return (
     <div className="ah-page">
@@ -217,25 +360,35 @@ export default function AdminHome() {
               <button type="button" className="ah-link" onClick={() => setShowNew(true)}>Create New Checklist</button>
             </div>
 
-            <Section title="Today's Activity">
-              {todays.length > 0
-                ? <div className="ah-grid">{todays.map((c) => <Card key={c.id} c={c} onRecipients={openRecipients} onEdit={setEditId} />)}</div>
-                : loaded && <div className="ah-empty ah-mono">NO CHECKLISTS DUE TODAY</div>}
-            </Section>
+            <div className="ah-list-filters">
+              <label>Checklist Status
+                <select value={checklistStatusFilter} onChange={(event) => setChecklistStatusFilter(event.target.value)}>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="all">All</option>
+                </select>
+              </label>
+              <label>Submission Status
+                <select value={submissionFilter} onChange={(event) => setSubmissionFilter(event.target.value)}>
+                  <option value="all">All</option>
+                  <option value="submitted">Last Submitted</option>
+                  <option value="never">Never Submitted</option>
+                </select>
+              </label>
+            </div>
 
-            
-            {!activeTeam && rows.length > 0 && (
+            {!activeTeam && (
               <Section title="All Checklists">
-                <div className="ah-grid">
-                  {rows.map((c) => <Card key={c.id} c={c} onRecipients={openRecipients} onEdit={setEditId} />)}
-                </div>
+                <ChecklistCollection rows={filteredRows} view={listView} onViewChange={setListView}
+                  onRecipients={openRecipients} onEdit={setEditId} onStatusEdit={openStatusEditor} statusFilter={checklistStatusFilter} />
               </Section>
             )}
 
             {activeTeam && (
               <Section title={`${activeTeam.name} Checklists`}>
                 {teamLists.length > 0
-                  ? <div className="ah-grid">{teamLists.map((c) => <Card key={c.id} c={c} onRecipients={openRecipients} onEdit={setEditId} />)}</div>
+                  ? <ChecklistCollection rows={teamLists} view={listView} onViewChange={setListView}
+                      onRecipients={openRecipients} onEdit={setEditId} onStatusEdit={openStatusEditor} statusFilter={checklistStatusFilter} />
                   : <div className="ah-empty ah-mono">NO LISTS SHARED WITH THIS TEAM YET</div>}
               </Section>
             )}
@@ -255,6 +408,25 @@ export default function AdminHome() {
           </main>
         </div>
       </div>
+
+      {statusChecklist && (
+        <div className="ah-status-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !statusSaving) setStatusChecklist(null); }}>
+          <div className="ah-status-modal" role="dialog" aria-modal="true" aria-labelledby="ah-status-title">
+            <h2 id="ah-status-title">Update Checklist Status</h2>
+            <p>{statusChecklist.title}</p>
+            <label htmlFor="ah-checklist-status">Status</label>
+            <select id="ah-checklist-status" value={statusValue ? "active" : "inactive"} onChange={(event) => setStatusValue(event.target.value === "active")}>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            {statusError && <div className="ah-status-error" role="alert">{statusError}</div>}
+            <div className="ah-status-modal-actions">
+              <button type="button" onClick={() => setStatusChecklist(null)} disabled={statusSaving}>Cancel</button>
+              <button type="button" className="ah-status-save" onClick={saveChecklistStatus} disabled={statusSaving}>{statusSaving ? "Saving…" : "Submit"}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {(showNew || editId) && (
         <NewChecklistModal
