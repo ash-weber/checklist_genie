@@ -140,7 +140,7 @@ function Card({ c, onOpen, onView, showSubmit = false, showCompleted = false }) 
   );
 }
 
-function Section({ label, open, onToggle, empty, items, onOpen, onView, showCompleted = false }) {
+function Section({ label, open, onToggle, empty, items, onOpen, onView, showCompleted = false, showSubmit = true }) {
   return (
     <section className="mr-sec">
       <button
@@ -152,7 +152,7 @@ function Section({ label, open, onToggle, empty, items, onOpen, onView, showComp
         <span>{label}</span>
         <span className={`mr-chevron ${open ? "mr-chevron-open" : ""}`} aria-hidden="true" />
       </button>
-      {open && (items.length ? <Grid items={items} onOpen={onOpen} onView={onView} showSubmit={false} showCompleted={showCompleted} /> : <div className="mr-empty">{empty}</div>)}
+      {open && (items.length ? <Grid items={items} onOpen={onOpen} onView={onView} showSubmit={showSubmit} showCompleted={showCompleted} /> : <div className="mr-empty">{empty}</div>)}
     </section>
   );
 }
@@ -375,16 +375,16 @@ export default function MemberHome() {
 
               <Section label="Upcoming" open={show.upcoming ?? buckets.upcoming.length > 0}
                 onToggle={() => setShow((s) => ({ ...s, upcoming: !(s.upcoming ?? buckets.upcoming.length > 0) }))}
-                items={buckets.upcoming} onOpen={setOpen} empty="Nothing due in the next 7 days." />
+                items={buckets.upcoming} onOpen={setOpen} showSubmit empty="Nothing due in the next 7 days." />
 
               <Section label="Scheduled" open={show.scheduled ?? buckets.scheduled.length > 0}
                 onToggle={() => setShow((s) => ({ ...s, scheduled: !(s.scheduled ?? buckets.scheduled.length > 0) }))}
-                items={buckets.scheduled} onOpen={setOpen} empty="Nothing scheduled further out." />
+                items={buckets.scheduled} onOpen={setOpen} showSubmit empty="Nothing scheduled further out." />
 
               <Section label="Completed" open={show.completed ?? false}
                 onToggle={() => setShow((s) => ({ ...s, completed: !(s.completed ?? false) }))}
                 items={buckets.done} onOpen={setOpen} onView={setViewSubmitted}
-                showCompleted empty="No completed checklists yet." />
+                showSubmit showCompleted empty="No completed checklists yet." />
             </>
           )}
         </main>
