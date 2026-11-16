@@ -224,6 +224,7 @@ export default function AdminHome() {
   const [listView, setListView] = useState("grid");
   const [checklistStatusFilter, setChecklistStatusFilter] = useState("active");
   const [submissionFilter, setSubmissionFilter] = useState("all");
+  const [checklistSearch, setChecklistSearch] = useState("");
   const [statusChecklist, setStatusChecklist] = useState(null);
   const [statusValue, setStatusValue] = useState(true);
   const [statusSaving, setStatusSaving] = useState(false);
@@ -275,8 +276,26 @@ export default function AdminHome() {
     }
     if (submissionFilter === "submitted") result = result.filter((c) => c.last_submitted_at && !Number.isNaN(new Date(c.last_submitted_at).getTime()));
     if (submissionFilter === "never") result = result.filter((c) => !c.last_submitted_at || Number.isNaN(new Date(c.last_submitted_at).getTime()));
+
+    const query = checklistSearch.trim().toLocaleLowerCase();
+    if (query) {
+      result = result.filter((c) => {
+        const firstType = c.list_types && c.list_types[0];
+        const category = firstType
+          ? LIST_TYPE[firstType] || firstType
+          : c.position ? POSITION[c.position] || c.position : "";
+        const searchable = [
+          c.title,
+          ...(c.shared_to || []),
+          category,
+          c.position ? POSITION[c.position] || c.position : "",
+          REPEAT[c.recurrence] || c.recurrence,
+        ].filter(Boolean).join(" ").toLocaleLowerCase();
+        return searchable.includes(query);
+      });
+    }
     return result;
-  }, [rows, checklistStatusFilter, submissionFilter]);
+  }, [rows, checklistStatusFilter, submissionFilter, checklistSearch]);
   const teamLists = teamId ? filteredRows.filter(inTeam) : [];
   const tiles = teams.map((t) => ({
     ...t,
@@ -361,6 +380,21 @@ export default function AdminHome() {
             </div>
 
             <div className="ah-list-filters">
+              <label className="ah-search-filter">Search Checklists
+                <span className="ah-search-control">
+                  <span className="ah-search-icon" aria-hidden="true">⌕</span>
+                  <input
+                    type="search"
+                    value={checklistSearch}
+                    onChange={(event) => setChecklistSearch(event.target.value)}
+                    placeholder="Search by checklist, team or category"
+                    aria-label="Search checklists by name, team or category"
+                  />
+                  {checklistSearch && (
+                    <button type="button" onClick={() => setChecklistSearch("")} aria-label="Clear checklist search">×</button>
+                  )}
+                </span>
+              </label>
               <label>Checklist Status
                 <select value={checklistStatusFilter} onChange={(event) => setChecklistStatusFilter(event.target.value)}>
                   <option value="active">Active</option>

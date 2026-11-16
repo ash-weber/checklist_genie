@@ -607,3 +607,62 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
+
+/* Workspace checklist search */
+.ah-search-filter {
+  min-width: 290px;
+}
+.ah-search-control {
+  display: flex;
+  align-items: center;
+  min-width: 290px;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--navy);
+}
+.ah-search-control:focus-within {
+  border-color: #8c9ab7;
+  box-shadow: 0 0 0 2px rgba(140, 154, 183, .12);
+}
+.ah-search-icon {
+  margin-right: 8px;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+}
+.ah-search-control input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--navy);
+  font: 400 13px "Manrope", sans-serif;
+}
+.ah-search-control input::placeholder {
+  color: var(--muted);
+}
+.ah-search-control button {
+  flex: none;
+  margin-left: 6px;
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+@media (max-width: 640px) {
+  .ah-search-filter,
+  .ah-search-control {
+    width: 100%;
+    min-width: 0;
+  }
+}

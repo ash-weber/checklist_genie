@@ -34,7 +34,6 @@ const LIST_TYPES = [
 const DAYS = [["SUN", "S"], ["MON", "M"], ["TUE", "T"], ["WED", "W"], ["THU", "T"], ["FRI", "F"], ["SAT", "S"]];
 const DEFAULT_GUIDE = {
   heading: "Here's How to Build Clear, Action-Ready Checklists",
-  max_items: 10,
   sections: [
     { title: "PHRASE IT AS AN ACTION", bullets: ["Timesheet filled in", "Server health check complete"],
       text: 'Write each item like a statement your team can check off; meaning no questions or "did you..."' },
@@ -319,7 +318,6 @@ export default function NewChecklistModal({ onClose, onCreated, editId }) {
   }, [editId]);
 
   const endDate = recEnd && recEnd >= due ? recEnd : addYear(due);
-  const maxItems = guide.max_items || 10;
   const setD = (patch) => setDraft((cur) => ({ ...cur, ...patch }));
   const isEmpty = items.length === 0 && !draft;
   const canToggle = !isEmpty || !showGuide;
@@ -560,9 +558,9 @@ export default function NewChecklistModal({ onClose, onCreated, editId }) {
           />
 
           <div className="nc-itemhead">
-            <button type="button" className="nc-add" onClick={() => !draft && items.length < maxItems && setDraft(emptyItem())} disabled={items.length >= maxItems}>
+            <button type="button" className="nc-add" onClick={() => !draft && setDraft(emptyItem())}>
               <span className="nc-addico">+</span>
-              <span className="nc-mono">{items.length >= maxItems ? "MAXIMUM ITEMS ADDED" : "ADD NEW ITEM"}</span>
+              <span className="nc-mono">ADD NEW ITEM</span>
             </button>
             {(items.length > 0 || draft) && (
               <div className="nc-rt nc-mono"><div>RESPONSE TYPE</div><div className="nc-rt-sub"><span>Yes/No</span><span>Numeric</span></div></div>
@@ -698,7 +696,7 @@ export default function NewChecklistModal({ onClose, onCreated, editId }) {
               : error ? <span className="nc-warn">{error}</span>
               : info ? <span>{info}</span>
               : tried && hasErrors ? <span className="nc-warn">COMPLETE REQUIRED INFORMATION TO CREATE AN EFFECTIVE CHECKLIST</span>
-              : isEmpty ? <span>TIP: Keeping it to {maxItems} items makes the list easier to follow + easier to finish!</span>
+              : isEmpty ? <span>TIP: Add as many checklist items as your workflow requires.</span>
               : <span>
                   {items.length} CHECKLIST ITEM{items.length === 1 ? "" : "S"}
                   {hiddenCount > 0 ? ` • ${hiddenCount} HIDDEN` : ""}
