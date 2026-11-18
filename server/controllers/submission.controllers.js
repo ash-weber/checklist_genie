@@ -123,8 +123,7 @@ const validateResponses = (responses, linkedById) => {
     const name = li.ChecklistItems.checklist_name;
     const type = li.ChecklistItems.input_type;
     const hasInput = !(r.input === undefined || r.input === null || r.input === "");
-    const hasComment = Boolean(r.comments && String(r.comments).trim());
-    if (!hasInput && !hasComment) return `Item "${name}" needs a response or a note.`;
+    // Empty responses are allowed. Validate only values that the user supplied.
     if (hasInput && type === "Boolean" && !["Yes", "No"].includes(r.input)) {
       return `Item "${name}" must be answered "Yes" or "No".`;
     }
@@ -145,7 +144,7 @@ const responseData = (r, li, submission_id, template, organisation_user_id, date
     selected_date: dateStr,
     input: hasInput ? String(r.input) : null,
     comments: r.comments && String(r.comments).trim() ? String(r.comments).trim() : null,
-    status: li.ChecklistItems.input_type === "Boolean" ? r.input === "Yes" : null,
+    status: li.ChecklistItems.input_type === "Boolean" && hasInput ? r.input === "Yes" : null,
     created_at: new Date(),
   };
 };

@@ -158,18 +158,18 @@ export default function SubmitChecklistModal({ checklistId, dueDate, initialDate
 
   const val = (it) => vals[it.linked_item_id] || EMPTY;
   const setVal = (id, patch) => setVals((s) => ({ ...s, [id]: { ...(s[id] || EMPTY), ...patch } }));
-  const isReady = (it) => {
-    const v = val(it);
-    const answered = it.response_type === "Boolean" ? v.input === "Yes" : String(v.input).trim() !== "";
-    return answered || v.note.trim() !== "";
-  };
+  // Checklist items are optional: users may submit without selecting Yes/No,
+  // entering a quantity, or adding a supporting note.
+  const isReady = () => true;
   const isSent = (it) => sent[it.linked_item_id] === snap(val(it));
   const toPayload = (it) => {
     const v = val(it);
     const raw = String(v.input).trim();
     return {
       linked_item_id: it.linked_item_id,
-      input: it.response_type === "Boolean" ? (v.input === "Yes" ? "Yes" : "No") : (raw === "" ? null : raw),
+      input: it.response_type === "Boolean"
+        ? (v.input === "Yes" ? "Yes" : v.input === "No" ? "No" : null)
+        : (raw === "" ? null : raw),
       comments: v.note.trim() || undefined,
     };
   };
