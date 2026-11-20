@@ -573,13 +573,13 @@ export default function NewChecklistModal({ onClose, onCreated, editId }) {
                 <div className="nc-itext">
                   <span>
                     {it.statement}
-                    {isEdit && it.item_id && !it.pid_locked ? (
+                    {isEdit && it.item_id ? (
                       <input
                         className="nc-pidedit nc-mono"
                         placeholder="PROCESS ID"
                         value={it.process_id}
                         maxLength={30}
-                        title="Optional. Set a Process ID (e.g. LQ_1) on this existing item."
+                        title="Edit the Process ID for this checklist item."
                         onChange={(e) => { setItemPid(i, e.target.value); searchRowPid(i, cleanPid(e.target.value)); }}
                         onFocus={() => it.process_id && searchRowPid(i, it.process_id)}
                         onBlur={() => {

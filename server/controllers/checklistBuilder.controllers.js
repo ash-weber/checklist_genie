@@ -313,51 +313,49 @@ const updateChecklist = async (req, res) => {
         const pid = item.process_id || null;
 
         let row = null;
+        const currentLink = item.item_id
+          ? currentByItemId.get(Number(item.item_id))
+          : null;
+        const currentItem = currentLink?.ChecklistItems;
+
         if (pid && existingByProcessId.has(pid)) {
+          // Reuse the item already associated with this Process ID.
           row = existingByProcessId.get(pid);
 
-          if (item.item_id) {
-            const curLink = currentByItemId.get(Number(item.item_id));
-            const cur = curLink?.ChecklistItems;
-            if (
-              cur &&
-              !cur.process_id &&
-              cur.id !== row.id &&
-              cur.checklist_name === statement &&
-              (cur.notes || "") === notes &&
-              cur.input_type === item.response_type &&
-              row.input_type === cur.input_type
-            ) {
-              const moved = await moveItemHistory(tx, id, cur.id, row.id);
-              
-              for (const li of currentLinked) {
-                if (moved.has(li.id)) li.checklist_item_id = row.id;
-              }
+          // If the Process ID was changed to one already in use, move this
+          // checklist's historical linked-item references to the reused item.
+          if (currentItem && currentItem.id !== row.id) {
+            const moved = await moveItemHistory(tx, id, currentItem.id, row.id);
+            for (const li of currentLinked) {
+              if (moved.has(li.id)) li.checklist_item_id = row.id;
             }
           }
-        } else if (pid && item.item_id) {
-          
-          const cur = currentByItemId.get(Number(item.item_id))?.ChecklistItems;
-          if (
-            cur &&
-            !cur.process_id &&
-            cur.checklist_name === statement &&
-            (cur.notes || "") === notes &&
-            cur.input_type === item.response_type
-          ) {
-            row = await tx.checklist_items.update({ where: { id: cur.id }, data: { process_id: pid } });
-          }
-        } else if (!pid && item.item_id) {
-          const cur = currentByItemId.get(Number(item.item_id))?.ChecklistItems;
-          if (
-            cur &&
-            cur.checklist_name === statement &&
-            (cur.notes || "") === notes &&
-            cur.input_type === item.response_type
-          ) {
-            row = cur;
+        } else if (currentItem) {
+          if (currentItem.process_id === pid) {
+            row = currentItem;
+          } else {
+            // A changed or removed Process ID gets a new item identity for this
+            // checklist. Preserve this checklist's prior submission history.
+            row = await tx.checklist_items.create({
+              data: {
+                checklist_name: statement,
+                notes: notes || null,
+                process_id: pid,
+                organisation_user_id,
+                organisation_id,
+                Instructions: notes,
+                input_type: item.response_type,
+                created_at: new Date(),
+              },
+            });
+
+            const moved = await moveItemHistory(tx, id, currentItem.id, row.id);
+            for (const li of currentLinked) {
+              if (moved.has(li.id)) li.checklist_item_id = row.id;
+            }
           }
         }
+
         if (!row) {
           row = await tx.checklist_items.create({
             data: {
