@@ -80,12 +80,55 @@ const teamFilter = async (organisation_id, teamIdRaw) => {
   return { userIds: members.map((m) => m.organisation_user_id) };
 };
 
-const responseWhere = (organisation_id, { from, to }, userIds, processId) => {
+const getCurrentProcessItems = async (organisation_id) => {
+  // Only checklist items attached to a checklist's current version are
+  // considered active for Insights. Old/orphaned item records remain in the
+  // database so historical data is preserved, but they are not listed.
+  const templates = await prisma.checklist_template.findMany({
+    where: {
+      organisation_id,
+      current_version_id: { not: null },
+    },
+    select: { current_version_id: true },
+  });
+
+  const versionIds = templates
+    .map((template) => template.current_version_id)
+    .filter(Boolean);
+
+  if (!versionIds.length) return { itemIds: [], processIds: new Set() };
+
+  const links = await prisma.checklist_template_linked_items.findMany({
+    where: {
+      template_version_id: { in: versionIds },
+      ChecklistItems: {
+        organisation_id,
+        process_id: { not: null },
+      },
+    },
+    select: {
+      checklist_item_id: true,
+      ChecklistItems: { select: { process_id: true } },
+    },
+  });
+
+  return {
+    itemIds: [...new Set(links.map((link) => link.checklist_item_id))],
+    processIds: new Set(
+      links
+        .map((link) => String(link.ChecklistItems?.process_id || "").trim())
+        .filter(Boolean)
+    ),
+  };
+};
+
+const responseWhere = (organisation_id, { from, to }, userIds, processId, currentItemIds) => {
   const where = {
     selected_date: { gte: from, lte: to },
     ChecklistTemplateLinkedItems: {
       ChecklistItems: {
         organisation_id,
+        id: { in: currentItemIds },
         process_id: processId ? processId : { not: null },
       },
     },
@@ -105,12 +148,19 @@ const getProcessInsights = async (req, res) => {
     const tf = await teamFilter(organisation_id, req.query.team_id);
     if (tf.error) return res.status(404).json({ error: tf.error });
 
+    const currentItems = await getCurrentProcessItems(organisation_id);
     const [defined, bpRows] = await Promise.all([
-      prisma.checklist_items.findMany({
-        where: { organisation_id, process_id: { not: null } },
-        select: { id: true, process_id: true, checklist_name: true, input_type: true, created_at: true },
-        orderBy: { created_at: "asc" },
-      }),
+      currentItems.itemIds.length
+        ? prisma.checklist_items.findMany({
+            where: {
+              organisation_id,
+              id: { in: currentItems.itemIds },
+              process_id: { not: null },
+            },
+            select: { id: true, process_id: true, checklist_name: true, input_type: true, created_at: true },
+            orderBy: { created_at: "asc" },
+          })
+        : Promise.resolve([]),
       prisma.business_process.findMany({
         where: { organisation_id },
         select: { code: true, name: true },
@@ -200,7 +250,7 @@ const getProcessInsights = async (req, res) => {
       if (!p.last_entry || day > p.last_entry) p.last_entry = day;
     };
 
-    const where = responseWhere(organisation_id, range, tf.userIds);
+    const where = responseWhere(organisation_id, range, tf.userIds, null, currentItems.itemIds);
     let cursor = null;
     for (;;) {
       const rows = await prisma.checklist_item_response.findMany({
@@ -289,14 +339,23 @@ const getProcessEntries = async (req, res) => {
     const tf = await teamFilter(organisation_id, req.query.team_id);
     if (tf.error) return res.status(404).json({ error: tf.error });
 
+    const currentItems = await getCurrentProcessItems(organisation_id);
+    if (!currentItems.processIds.has(processId)) {
+      return res.status(404).json({ error: "Process ID is not assigned to a current checklist item." });
+    }
+
     const first = await prisma.checklist_items.findFirst({
-      where: { organisation_id, process_id: processId },
+      where: {
+        organisation_id,
+        id: { in: currentItems.itemIds },
+        process_id: processId,
+      },
       orderBy: { created_at: "asc" },
       select: { input_type: true },
     });
     const processType = first?.input_type;
 
-    const where = responseWhere(organisation_id, range, tf.userIds, processId);
+    const where = responseWhere(organisation_id, range, tf.userIds, processId, currentItems.itemIds);
     const PAGE = 500;
     const MAX_PAGES = 6;
     const out = [];
